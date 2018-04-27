@@ -176,13 +176,18 @@ namespace HTTPServer
             if (!inside&&RequestUri == "/")
             {
                 inside = true;
-
-                string test_res = "";
-                test_res = File.ReadAllText(@"in.html");
-
+                string res = "";
+                {
+                    string first_part_html = File.ReadAllText(@"in1.html");
+                    string second_part_html = "'><input type=\"hidden\" id=\"string_base_info_articles\" value='";
+                    string json_articles = File.ReadAllText(@"Article.json");
+                    string json_sections = File.ReadAllText(@"Section.json");
+                    string third_part_html = File.ReadAllText(@"in2.html");
+                    res = first_part_html + json_sections + second_part_html + json_articles + third_part_html;
+                }
                 //string Html = "<html><body><h1>It works!</h1></body></html>";
                 // Необходимые заголовки: ответ сервера, тип и длина содержимого. После двух пустых строк - само содержимое
-                string Str = "HTTP/1.1 200 OK\nContent-type: text/html\nContent-Length:" + test_res.Length.ToString() + "\n\n" + test_res;
+                string Str = "HTTP/1.1 200 OK\nContent-type: text/html\nContent-Length:" + res.Length.ToString() + "\n\n" + res;
                 // Приведем строку к виду массива байт
                 byte[] Buffer1 = Encoding.ASCII.GetBytes(Str);
                 // Отправим его клиенту
