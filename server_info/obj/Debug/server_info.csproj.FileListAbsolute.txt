@@ -1,0 +1,6 @@
+E:\csharp\server_info\server_info\bin\Debug\server_info.exe.config
+E:\csharp\server_info\server_info\bin\Debug\server_info.exe
+E:\csharp\server_info\server_info\bin\Debug\server_info.pdb
+E:\csharp\server_info\server_info\obj\Debug\server_info.csprojResolveAssemblyReference.cache
+E:\csharp\server_info\server_info\obj\Debug\server_info.exe
+E:\csharp\server_info\server_info\obj\Debug\server_info.pdb
