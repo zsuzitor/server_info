@@ -1,8 +1,23 @@
-﻿'>
+﻿<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8">
+	<link  href="/style/style.css" rel="stylesheet" type="text/css" >
+<script src="/script/jquery-3.2.1.min.js"></script>
+<script src="/script/jquery.unobtrusive-ajax.min.js"></script>
+<script src="/script/js.js"></script>
 
 
+
+</head><body>
+	<div style="display: none;">
+		<div id="div_for_ajax_id"></div>
+		<a id="_link_for_ajax_" data-ajax="true"  data-ajax-complete="OnComplete_" data-ajax-mode="replace" data-ajax-update="#div_for_ajax_id" href="/">text</a>
 	</div>
-
+	<div class="div_for_change_info" id="div_for_change_info_id">
+	</div>
+	<div class="div_for_base_info" id="div_for_base_info_id">
+		<input type="hidden" id="string_base_info_sections" value='<hr class="hr_for_replace_server_1"/>'><input type="hidden" id="string_base_info_articles" value='<hr class="hr_for_replace_server_1"/>'>
+	</div>
 	<div class="main_div">
 		<div class="main_top_div">
 			
@@ -16,10 +31,8 @@
 								<div class="div_inline_block"><div class="div_settings_left_b" onclick="show_left_menu()"></div></div>
 								<div  class="div_inline_block">
 									<div class="div_settings_centre_b" onmouseup="click_on_centre_settings(false)" onmousedown="click_on_centre_settings(true)">
-
 									</div></div>
 									<div class="div_inline_block"><div class="div_settings_right_b" onclick="hidden_left_menu()">
-
 									</div></div>
 								</div>
 								<div id="div_settings_bottom_b_ex"><div class="div_settings_bottom_b" onclick="show_top_menu()">
@@ -39,8 +52,6 @@
 						<div class="top_menu_button top_menu_save_button" onclick='save_server_db()' title="Сохранить все изменения" onclick=''>
 						<span class="span_top_menu_save">&#9883;</span></div>
 					</div>
-
-
 							<div class="scroll_top_button" id="scroll_top_button_id" onclick="up()">
 
 						</div></div>
@@ -48,13 +59,5 @@
 							<div class="div_inline_block main_block_left" id="main_block_left_id"></div>
 							<div class="div_inline_block  main_block_right" id="main_block_right_id"></div></div>
 						</div>
-
-
-
-
-
-
-
-
 					</body></html>
 

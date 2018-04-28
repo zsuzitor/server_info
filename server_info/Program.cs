@@ -108,7 +108,7 @@ namespace HTTPServer
                         ContentType = "text/html";
                         break;
                     case ".css":
-                        ContentType = "text/stylesheet";
+                        ContentType = "text/css";
                         break;
                     case ".js":
                         ContentType = "text/javascript";
@@ -178,12 +178,15 @@ namespace HTTPServer
                 inside = true;
                 string res = "";
                 {
-                    string first_part_html = File.ReadAllText(@"in1.html");
-                    string second_part_html = "'><input type=\"hidden\" id=\"string_base_info_articles\" value='";
+
+                    //string first_part_html = File.ReadAllText(@"in1.html");
+                    //string second_part_html = "'><input type=\"hidden\" id=\"string_base_info_articles\" value='";
                     string json_articles = File.ReadAllText(@"Article.json");
                     string json_sections = File.ReadAllText(@"Section.json");
-                    string third_part_html = File.ReadAllText(@"in2.html");
-                    res = first_part_html + json_sections + second_part_html + json_articles + third_part_html;
+                    // string third_part_html = File.ReadAllText(@"in2.html");
+
+                    string[] str_from_file = File.ReadAllText(@"index.html").Split(new string[] { "<hr class=\"hr_for_replace_server_1\"/>" }, StringSplitOptions.None);
+                    res = str_from_file[0] + json_sections + str_from_file[1] + json_articles + str_from_file[2];
                 }
                 //string Html = "<html><body><h1>It works!</h1></body></html>";
                 // Необходимые заголовки: ответ сервера, тип и длина содержимого. После двух пустых строк - само содержимое
@@ -198,9 +201,35 @@ namespace HTTPServer
             //TODO тут обрабатывать запрос
             if (!inside && RequestUri.IndexOf("/adds/") ==0)
             {
+                string str = "";
                 if(RequestUri.IndexOf("/section/") == 5)
                 {
                     inside = true;
+                    str= RequestUri.Substring(14);
+
+
+
+
+                    Section tmp_section = null;
+                        DataContractJsonSerializer jsonFormatter_1 = new DataContractJsonSerializer(typeof(Section));
+                        using (var fs= new MemoryStream(Encoding.UTF8.GetBytes(str)))
+                        {
+                         tmp_section = (Section)jsonFormatter_1.ReadObject(fs);
+
+
+                        }
+                    Section_list.Add(tmp_section);
+                        
+                    
+
+
+
+
+
+
+
+
+
                 }
                 if (RequestUri.IndexOf("/article/") == 5)
                 {
@@ -310,13 +339,7 @@ namespace HTTPServer
         
 
 
-
         
-
-
-
-
-
         // Запуск сервера
         public Server(int Port)
         {
@@ -341,6 +364,7 @@ namespace HTTPServer
                 // Остановим его
                 Listener.Stop();
             }
+            write_db();
         }
 
         static void Main(string[] args)
