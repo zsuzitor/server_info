@@ -27,6 +27,7 @@ hidden_search_block show_search_block мб не нужен и тот что ря
 
 когда скрывается левый список кнопкой и потом тянуть блок с настройками вправо уже руками, для списка размер плохой задается попробовать пофиксить
 
+после редактирования проверять изменилось ли что то  и после этого решать отправлять ли на сервер
 добавить облако тегов его редактирование сохранение хранение и поиск по ним
 +++++++
 //передавать в шарп в json строке всю инфу которая нужна
@@ -368,10 +369,87 @@ function hidden_search_block(){
 }
 
 function start_search(){
-var string=document.getElementById("search_string_client");
+	var string=document.getElementById("search_string_client");
+//приоритет
+// если начинается с / то ищем еще и секцию
+//если есть + то слова соседние ищутся только рядом
+//за вхождение в header или теги все ниже *1 ,в body-0.7 
+//1 первая часть слова- приоритет 0.5
+//2 все слово целиком-1
+//3 за каждую пару слов которая рядом стоит -0.5
+//4 за #тег среди тегов - смотрим 1п и 2п +0.5
+//5 за (слово) -смотрим 1п и 2п +1
+
+
 //если есть слово с # искать по облаку тегов именно это слово и ему большой приоритет
+//(слово) больший приоритет
 
 
+//TODO проверить
+//сейчас просто поиск по колличеству
+//find_in_article поправить и там умножать если слова не полные найдены и если их несколько в массиве умножать на коэф*количество слов
+//добавить секции
+//добавить спецсомволы
+var search_string=string.value;
+var mass_words=search_string.split(" ");
+var main_mass_obj_articles=[];
+
+
+
+for(var num_count=1;num_count<mass_words.length;++num_count){
+for(var i=0;i<i+num_count<mass_words.length;++i){
+var tmp_mass=[];
+for(var i2=i;i2<num_count+i;tmp_mass.push(mass_words[i2++]));
+
+summ_mass(find_in_article(tmp_mass.join(" ")));
+
+}
+
+}
+//массив объектов с id статьи и предварительными баллами за каждый раздел
+function find_in_article(str){
+	var res=[];
+	var mass_full=str.split(" ");
+	var mass_not_full=[];
+	for(var i=0;i<mass_full.length;++i){
+		if(mass_full[i].length>4){
+			mass_not_full.push(mass_full[i].substring(0,Math.ceil(mass_full[i].length*0,75)));
+		}
+		else
+			mass_not_full.push(mass_full[i]);
+	}
+	var not_full_str=mass_not_full.join("\S*\s");
+	var full_str=mass_full.join("\S*\s");//TODO возможно \\S
+	var reg1 = new RegExp(not_full_str, "g")
+	var reg2 = new RegExp(full_str, "g")
+
+	for(var i=0;i<mass_article.length;++i){
+		var obj_for_res={};
+		obj_for_res.Id=mass_article[i].Id;
+//TODO еще по тегам искать
+obj_for_res.Count_head= mass_article[i].Head.match(reg1).length;
+obj_for_res.Count_head+= mass_article[i].Head.match(reg2).length;
+obj_for_res.Count_body= mass_article[i].Body.match(reg1).length;
+obj_for_res.Count_body+= mass_article[i].Body.match(reg2).length;
+res.push(obj_for_res);
+}
+return res;
+
+}
+function summ_mass(mass){
+	
+	for(var i=0;i<mass.length;++i){
+		if(main_mass_obj_articles.length==0)
+			main_mass_obj_articles.push(mass[i]);
+		else
+			for(var i2=0;i2<main_mass_obj_articles.length;++i2){
+				if(mass[i].Id==main_mass_obj_articles[i2].Id){
+					main_mass_obj_articles[i2].Count_head=mass[i].Count_head;
+					main_mass_obj_articles[i2].Count_body=mass[i].Count_body;
+				}
+			}
+		}
+	}
 
 
 }
@@ -633,10 +711,10 @@ function edit_select_article_form(id){
 
 function convert_string(str){
 	var res="";
-res=str.replace(/</g,'&lt;');
-res=res.replace(/>/g,'&gt;');
+	res=str.replace(/</g,'&lt;');
+	res=res.replace(/>/g,'&gt;');
 //&lt; и &gt;
-	return res;
+return res;
 }
 
 function save_server_db(){
