@@ -8,19 +8,12 @@ TODO
 
 добавить резервное копирование и спрашивать о том нужно ли сохранение(мб просто кнопку в меню сверху)
 
-передавать в шарп в json строке всю инфу которая нужна
+
 после каждого действия (сохранния удаления сохранять это действие в json и в html)
 
-
-
-
 кнопка для закрытия всех вкладок
-hidden_search_block мб не нужен и тот что рядом тоже
+hidden_search_block show_search_block мб не нужен и тот что рядом тоже(поменять на css свойства)
 
-возможность редактирования выделенного объекта
-на стороне сервера или js если сохраняется код html то надо "<>" заменять на "&lt; и &gt;"   //При этом тег <p> будет выглядеть как &lt;p&gt;
-
-при наведении на кнопки делать их "выдавливание " тенью
 
 проверить что бы везде были ;;;;
 
@@ -30,11 +23,17 @@ hidden_search_block мб не нужен и тот что рядом тоже
 добавить защиту на клики(пока определенная функция не выполнится не разрешать менять last_click_name)
 
 разобраться c хранением данных htmlи вообще потестить как хранятся отображаются разные комбинации и тдтдтдтд
-
+при удалении спрашивать подтверждение??
 
 когда скрывается левый список кнопкой и потом тянуть блок с настройками вправо уже руками, для списка размер плохой задается попробовать пофиксить
 
+добавить облако тегов его редактирование сохранение хранение и поиск по ним
 +++++++
+//передавать в шарп в json строке всю инфу которая нужна
+//html сейчас не отображается
+//возможность редактирования выделенного объекта
+//на стороне сервера или js если сохраняется код html то надо "<>" заменять на "&lt; и &gt;"   //При этом тег <p> будет выглядеть как &lt;p&gt;
+//при наведении на кнопки делать их "выдавливание " тенью
 //при удалении запретить удалять внешний блок!!!!!!!!!
 //слева в строке кнопку для подъема наверх
 //add_section_form починить
@@ -183,7 +182,7 @@ function str_add_name_section(id,all){
 	var res="";
 	if(all!=null&&all==true)
 		res+="<div  class='div_one_section_name' onclick='click_name_section(this)' id='div_one_section_name_"+id+"'>";
-	res+="<div id='before_for_sect_name_"+id+"' class='before_for_sect_name div_inline_block'></div><div class='div_inline_block' id='div_one_section_name_text_"+id+"'>"+ find_in_mass(id,1).Head+"</div>";
+	res+="<div id='before_for_sect_name_"+id+"' class='before_for_sect_name div_inline_block'></div><div class='div_inline_block' id='div_one_section_name_text_"+id+"'>"+ convert_string(find_in_mass(id,1).Head)+"</div>";
 	if(all!=null&&all==true)
 		res+="</div>";
 	return res;
@@ -207,7 +206,7 @@ function load_one_section(id){
 
 	for(var i=0;i<mass_article.length;++i){
 		if(mass_article[i].Section_id==id){
-			res+="<div class='div_one_article_name' id='div_one_article_name_"+mass_article[i].Id+"' onclick='load_article("+mass_article[i].Id+")'>"+mass_article[i].Head+"</div>";
+			res+="<div class='div_one_article_name' id='div_one_article_name_"+mass_article[i].Id+"' onclick='load_article("+mass_article[i].Id+")'>"+convert_string(mass_article[i].Head)+"</div>";
 		}
 	}
 
@@ -280,12 +279,12 @@ function find_in_mass(id,type_mass){//1--секция 2--артикл
 				var res="";
 				var right_div=document.getElementById("main_block_right_id");
 				res="<div>";
-				res+="<h1>";
-				res+=acticle.Head;
-				res+="<h1>";
-				res+="<div>";
-				res+=acticle.Body;
-				res+="</div>";
+				res+="<h1><pre>";
+				res+=convert_string(acticle.Head);
+				res+="</pre><h1>";
+				res+="<div><pre>";
+				res+=convert_string(acticle.Body);
+				res+="</pre></div>";
 				res+="</div>";
 				right_div.innerHTML=res;
 			}
@@ -369,6 +368,10 @@ function hidden_search_block(){
 }
 
 function start_search(){
+var string=document.getElementById("search_string_client");
+//если есть слово с # искать по облаку тегов именно это слово и ему большой приоритет
+
+
 
 
 }
@@ -615,6 +618,7 @@ function edit_select_section_form(id){
 function edit_select_article_form(id){
 	var block=find_in_mass(id,2);
 	var name=document.getElementById("div_one_article_name_"+id);
+	var div_save=document.getElementById("div_for_change_info_id");
 	block.Head=document.getElementById("input_for_article_head").value;
 	block.Body=document.getElementById("input_for_article_body").value;
 	name.innerHTML=block.Head;
@@ -627,6 +631,13 @@ function edit_select_article_form(id){
 }
 
 
+function convert_string(str){
+	var res="";
+res=str.replace(/</g,'&lt;');
+res=res.replace(/>/g,'&gt;');
+//&lt; и &gt;
+	return res;
+}
 
 function save_server_db(){
 	//
@@ -679,6 +690,6 @@ function send(str_id,type,p_type){
 }
 
 function OnComplete_(request, status) { 
-	alert("Статус запроса : " + status); 
-	alert("request : " + request); 
+	//alert("Статус запроса : " + status); 
+	//alert("request : " + request); 
 }
