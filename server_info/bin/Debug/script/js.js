@@ -41,6 +41,9 @@ hidden_search_block мб не нужен и тот что рядом тоже
 
 разобраться c хранением данных htmlи вообще потестить как хранятся отображаются разные комбинации и тдтдтдтд
 
+
+когда скрывается левый список кнопкой и потом тянуть блок с настройками вправо уже руками, для списка размер плохой задается попробовать пофиксить
+
 +++++++
 //при удалении запретить удалять внешний блок!!!!!!!!!
 //слева в строке кнопку для подъема наверх
@@ -78,8 +81,8 @@ for(var i=0;i<mass_section.length;++i)
 //подумать над внутренними тенями особенно на кнопки и сделать кнопки как то красивее и "активнее"
 //блок настроек сейчас немного не симметрично расположен 1-2 пикселя
 //когда смещаю влево блок с кнопками смещать правее блок menu или вообще его на постоянку переместить правее и смотреть что бы его не перекрывала кнопка поиска
-
-
+//передавать с клиента все 1 строкой
+//сделать класс в котором свойства обоих классов
 
 
 */
@@ -539,9 +542,9 @@ mass_section.push(obj);
 //TODO занести в html и обновить инфу в списке
 var res="";
 
-for(var num=0;document.getElementById('save_adds_section_id_'+num)!=null;++num);
+for(var num=0;document.getElementById('save_adds_section_'+num)!=null;++num);
 
-	res+="<input id='save_adds_section_id_"+num+"' type='hidden' value='"+obj.Id+"'>";
+	res+="<input id='save_adds_section_"+num+"' type='hidden' value='"+obj.Id+"'>";
 res+="<input id='save_adds_section_parrent_id_"+obj.Id+"' type='hidden' value='"+obj.Parrent_id+"'>";
 res+="<input id='save_adds_section_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
 div_save.innerHTML+=res;
@@ -555,7 +558,7 @@ tmp+=load_one_section(obj.Id);
 inside_sect.innerHTML+=tmp;
 
 
-
+right_div.innerHTML='';
 }
 function find_maximum_id(mass){
 	var max=null;
@@ -597,7 +600,7 @@ var res="";
 
 for(var num=0;document.getElementById('save_adds_article_'+num)!=null;++num);
 
-	res+="<input id='save_adds_article_id_"+num+"' type='hidden' value='"+obj.Id+"'>";
+	res+="<input id='save_adds_article_"+num+"' type='hidden' value='"+obj.Id+"'>";
 res+="<input id='save_adds_article_section_id_"+obj.Id+"' type='hidden' value='"+obj.Section_id+"'>";
 res+="<input id='save_adds_article_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
 res+="<input id='save_adds_article_body_"+obj.Id+"' type='hidden' value='"+obj.Body+"'>";
@@ -607,7 +610,7 @@ var tmp="";
 tmp+="<div class='div_one_article_name' id='div_one_article_name_"+obj.Id+"' onclick='load_article("+obj.Id+")'>"+obj.Head+"</div>";
 
 inside_sect.innerHTML+=tmp;
-
+right_div.innerHTML='';
 }
 
 function dell_select(){
@@ -824,24 +827,32 @@ function save_server_db(){
 //save_adds_section_id_  по счетчику смотрю id по id беру данные в  save_adds_section_parrent_id_  save_adds_section_head_
 
 var link=document.getElementById("_link_for_ajax_");
+var mass_obj=[];
+
+send("save_adds_section_",1,1);
+send("save_adds_article_",1,2);
+send("save_edit_section_",3,1);
+send("save_edit_article_",3,2);
+send("save_delete_section_",2,1);//2
+send("save_delete_article_",2,2);//2
 
 
-send("save_adds_section_id_",1,"/adds/section/");
-send("save_adds_article_id_",1,"/adds/article/");
-send("save_delete_section_",2,"/delete/section/");
-send("save_delete_article_",2,"/delete/article/");
-send("save_edit_section_",1,"/edit/section/");
-send("save_edit_article_",1,"/edit/article/");
-
-
-function send(str_id,type,str_){
-	var str=str_;
+var str="/change_something/"+JSON.stringify(mass_obj);
+	link.href=str;
+	link.click();
+link.href='';
+var div_save=document.getElementById("div_for_change_info_id");
+div_save.innerHTML='';
+function send(str_id,type,p_type){
+	//var str=str_;
 	var tmp=document.getElementById(str_id+'0');
-	var html_for_save_id=tmp.value;
+	
 	var block=null;
 	for(var i=0;tmp!=null;tmp=document.getElementById(str_id+ ++i)){
-		if(type==1){
-	 block=find_in_mass(html_for_save_id,type);
+		var obj={};
+		var html_for_save_id=tmp.value;
+		if(type==1||type==3){
+	 block=find_in_mass(html_for_save_id,p_type);
 	
 }
 else if(type==2){
@@ -849,10 +860,16 @@ else if(type==2){
 	block={};
 	block.Id=html_for_save_id;
 }
+obj.Id=block.Id;
+obj.Action=type;
+obj.Type=p_type;
+obj.Section_id=block.Section_id==undefined?null:block.Section_id;
+obj.Parrent_id=block.Parrent_id==undefined?null:block.Parrent_id;
+obj.Head=block.Head==undefined?null:block.Head;
+obj.Body=block.Body==undefined?null:block.Body;
 
-str+=JSON.stringify(block);
-	link.href=str;
-	link.click();
+
+	mass_obj.push(obj);
 }
 
 }
@@ -860,4 +877,5 @@ str+=JSON.stringify(block);
 
 function OnComplete_(request, status) { 
 	alert("Статус запроса : " + status); 
+	alert("request : " + request); 
 }

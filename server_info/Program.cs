@@ -9,6 +9,7 @@ using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Runtime.Serialization;
 using static HTTPServer.for_main;
+using System.Linq;
 
 
 namespace HTTPServer
@@ -199,68 +200,129 @@ namespace HTTPServer
                 Client.Close();
             }
             //TODO тут обрабатывать запрос
-            if (!inside && RequestUri.IndexOf("/adds/") ==0)
+
+            if (!inside && RequestUri.IndexOf("/change_something/") == 0)
             {
-                string str = "";
-                if(RequestUri.IndexOf("/section/") == 5)
+                inside = true;
+                string str = RequestUri.Substring(18);
+                List<Object_from_user> tmp_list = new List<Object_from_user>();
+                try
                 {
-                    inside = true;
-                    str= RequestUri.Substring(14);
-
-
-
-
-                    Section tmp_section = null;
-                        DataContractJsonSerializer jsonFormatter_1 = new DataContractJsonSerializer(typeof(Section));
-                        using (var fs= new MemoryStream(Encoding.UTF8.GetBytes(str)))
-                        {
-                         tmp_section = (Section)jsonFormatter_1.ReadObject(fs);
-
-
-                        }
-                    Section_list.Add(tmp_section);
-                        
-                    
-
-
-
-
-
-
-
-
-
+                    DataContractJsonSerializer jsonFormatter_1 = new DataContractJsonSerializer(typeof(List<Object_from_user>));
+                    using (var fs = new MemoryStream(Encoding.UTF8.GetBytes(str)))
+                    {
+                        tmp_list = (List<Object_from_user>)jsonFormatter_1.ReadObject(fs);
+                    }
                 }
-                if (RequestUri.IndexOf("/article/") == 5)
+                catch
                 {
-                    inside = true;
+                    Console.WriteLine("Произошла ошибка при чтении строки отправенной"+
+"пользователем для сохранения, был создан пустой список с статьями ");
+                    Article_list = new List<Article>();
                 }
+
+
+                foreach(var i in tmp_list)
+                {
+                    switch (i.Action)
+                    {
+                        case 1://добавляем
+                            if (i.Type == 1)//секциия
+                            {
+                                Section_list.Add(new Section() {Id=i.Id, Parrent_id=(int)i.Parrent_id, Head=i.Head });
+                            }
+                            else if (i.Type == 2)//статья
+                            {
+                                Article_list.Add(new Article() { Id=i.Id, Section_id=(int)i.Section_id, Head=i.Head, Body=i.Body });
+                            }
+                            break;
+
+                        case 2://удаляем
+                            if (i.Type == 1)//секциия
+                            {
+                                Section_list.Remove(Section_list.First(x1 => x1.Id == i.Id));
+                            }
+                            else if (i.Type == 2)//статья
+                            {
+                                Article_list.Remove(Article_list.First(x1 => x1.Id == i.Id));
+                            }
+                            break;
+
+                        case 3://редактируем
+
+                            if (i.Type == 1)//секциия
+                            {
+                                var tmp = Section_list.First(x1 => x1.Id == i.Id);
+                                tmp.Parrent_id = (int)i.Parrent_id;
+                                tmp.Head = i.Head;
+                            }
+                            else if (i.Type == 2)//статья
+                            {
+                                var tmp = Article_list.First(x1 => x1.Id == i.Id);
+                                tmp.Section_id = (int)i.Section_id;
+                                tmp.Head = i.Head;
+                                tmp.Body = i.Body;
+                            }
+                            break;
+
+
+                    }
+                }
+                write_db();
+                SendError(Client, 200);
             }
-            if (!inside && RequestUri.IndexOf("/edit/") == 0)
-            {
-                if (RequestUri.IndexOf("/section/") == 5)
+                /*
+                if (!inside && RequestUri.IndexOf("/adds/") ==0)
                 {
-                    inside = true;
-                }
-                if (RequestUri.IndexOf("/article/") == 5)
-                {
-                    inside = true;
-                }
-            }
-            if (!inside && RequestUri.IndexOf("/delete/") == 0)
-            {
-                if (RequestUri.IndexOf("/section/") == 7)
-                {
-                    inside = true;
-                }
-                if (RequestUri.IndexOf("/article/") == 7)
-                {
-                    inside = true;
-                }
-            }
+                    string str = "";
+                    if(RequestUri.IndexOf("/section/") == 5)
+                    {
+                        inside = true;
+                        str= RequestUri.Substring(14);
+
+                        Section tmp_section = null;
+                            DataContractJsonSerializer jsonFormatter_1 = new DataContractJsonSerializer(typeof(Section));
+                            using (var fs= new MemoryStream(Encoding.UTF8.GetBytes(str)))
+                            {
+                             tmp_section = (Section)jsonFormatter_1.ReadObject(fs);
 
 
-        }
+                            }
+                        Section_list.Add(tmp_section);
+
+
+
+                    }
+                    if (RequestUri.IndexOf("/article/") == 5)
+                    {
+                        inside = true;
+                    }
+                }
+                if (!inside && RequestUri.IndexOf("/edit/") == 0)
+                {
+                    if (RequestUri.IndexOf("/section/") == 5)
+                    {
+                        inside = true;
+                    }
+                    if (RequestUri.IndexOf("/article/") == 5)
+                    {
+                        inside = true;
+                    }
+                }
+                if (!inside && RequestUri.IndexOf("/delete/") == 0)
+                {
+                    if (RequestUri.IndexOf("/section/") == 7)
+                    {
+                        inside = true;
+                    }
+                    if (RequestUri.IndexOf("/article/") == 7)
+                    {
+                        inside = true;
+                    }
+                }
+                */
+
+            }
     }
      static class for_main
     {
@@ -320,13 +382,13 @@ namespace HTTPServer
 
 
             DataContractJsonSerializer jsonFormatter_1 = new DataContractJsonSerializer(typeof(List<Article>));
-            using (FileStream fs = new FileStream("Article.json", FileMode.OpenOrCreate))
+            using (FileStream fs = new FileStream("Article.json", FileMode.Create))
             {
                 jsonFormatter_1.WriteObject(fs, Article_list);
                 
             }
             DataContractJsonSerializer jsonFormatter_2 = new DataContractJsonSerializer(typeof(List<Section>));
-            using (FileStream fs = new FileStream("Section.json", FileMode.OpenOrCreate))
+            using (FileStream fs = new FileStream("Section.json", FileMode.Create))
             {
                 jsonFormatter_2.WriteObject(fs, Section_list);
             }
@@ -364,7 +426,7 @@ namespace HTTPServer
                 // Остановим его
                 Listener.Stop();
             }
-            write_db();
+            //write_db();
         }
 
         static void Main(string[] args)
@@ -419,4 +481,25 @@ namespace HTTPServer
             Head = "";
         }
     }
-}
+    public class Object_from_user
+    {
+        public int Id { get; set; }
+        public int? Action { get; set; }
+        public int? Type { get; set; }
+        public int? Section_id { get; set; }
+        public int? Parrent_id { get; set; }
+        public string Head { get; set; }
+        public string Body { get; set; }
+
+        public Object_from_user()
+        {
+            Id = -1;
+            Action = null;
+            Type = null;
+            Section_id = null;
+            Parrent_id = null;
+            Head = null;
+            Body = null;
+        }
+    }
+    }
