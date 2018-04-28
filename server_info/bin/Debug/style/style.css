@@ -1,7 +1,6 @@
 input,
 	select,
 	textarea {
-		/*max-width: 280px;*/
 		width:100%;
 		height: 100%;
 		box-sizing: border-box;
@@ -32,13 +31,7 @@ input,
 		vertical-align: top;
 	}
 	body{
-		/*margin: 0;*/
 		position: relative;
-		/* box-sizing: border-box; */
-
-
-
-
 		background-color: #DDD7D7;
 		background-size: 50px 50px;
 		background-image: 
@@ -46,9 +39,6 @@ input,
 		linear-gradient(45deg, transparent 52%, rgba(255,255,255,0.6) 54%, transparent 55%, transparent),
 		linear-gradient(-45deg, transparent 50%, rgba(0,0,0,0.1) 52%, transparent 53%, transparent),
 		linear-gradient(45deg, transparent 50%, rgba(0,0,0,0.05) 52%, transparent 53%, transparent);
-
-
-
 	}
 	/*---------------------------------------------------------------------------------------*/
 	div.main_div{
@@ -63,7 +53,6 @@ input,
 		left: 0;
 		width: 100%;
 		z-index: 10;
-		/* background-color: #FFA07A; */
 		background-color: rgba(255, 160, 122, 0.5);
 	}
 	div.main_block_left{
@@ -86,40 +75,19 @@ input,
 		position: absolute;
 		overflow-x: auto;
 		box-shadow: 0 0 10px rgba(0,0,0,0.5);
-		/* background-color:  rgba(128, 128, 128,0.5); */
 		background-color:  rgba(255, 255, 255,0.5);
 		
-
-/* background-color: #DEE2E5;
-background-image: 
-linear-gradient(transparent 99px, white 99px), 
-linear-gradient(90deg, transparent 99px, white 99px), 
-linear-gradient(transparent 19px, rgba(255, 255, 255, 0.3) 19px), 
-linear-gradient(90deg, transparent 19px, rgba(255, 255, 255, 0.3) 19px);
-background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px; */
 }
 div.div_for_block{
 	margin-top: 100px;
 	margin-left: 50px;
 	position: relative;
-	/*min-width: 600px;*/
 }
 div.div_left_column{
 	width: 55px;
-
 	position: fixed;
 	top: 100px;
 	left: 0;
-
-	/* background-color: #DCDCDC; */
-/* box-shadow: 0 0 10px rgba(0,0,0,0.5);
-		border: 1px solid black;
-		background-image: 
-linear-gradient(135deg, transparent 84px, #d95b43 84px, #d95b43 100px, #ecd078 100px, #ecd078 106px, #c02942 106px, #c02942 120px, #ecd078 121px, #ecd078 127px, #542437 127px, #542437 142px, #ecd078 142px, #ecd078 148px, #53777a 148px, #53777a 163px, #ecd078 163px, #ecd078 168px, #d95b43 169px), 
-linear-gradient(135deg, #d95b43 15px, #d95b43, #ecd078 15px, #ecd078 21px, #c02942 21px, #c02942 36px, #ecd078 36px, #ecd078 42px, #542437 42px, #542437 57.5px, #ecd078 57px, #ecd078 63px, #53777a 63px, #53777a 78px, #ecd078 78px, #ecd078 84px, transparent 84px, transparent 99px);
-background-size: 120px 120px; */
-
-
 }
 div.div_search{
 	border: 1px solid black;
@@ -132,9 +100,6 @@ div.div_search{
 	background-color: #FFFACD;
 }
 
-/* div.div_search:hover{
-	width: 300px;
-	} */
 	div.div_settings_block{
 		width: 98px;
 		top: 0;
@@ -162,7 +127,6 @@ div.div_search{
 	}
 	@keyframes rotate_glass_transform{
 		0%{
-
 			transform: rotate(0deg);
 		}
 		100%{
@@ -179,7 +143,6 @@ div.div_search{
 	div.div_for_top_menu{
 		position: absolute;
 		width: 100%;
-		/* height: 50px; */
 		top: 30px;
 		left: -70px;
 		transition: 1s;
@@ -199,7 +162,6 @@ div.div_search{
 		border-bottom:20px solid transparent;
 		border-top:20px solid transparent;
 		cursor: pointer;
-		
 	}
 	div.div_settings_centre_b{
 		width: 10px;
@@ -241,7 +203,6 @@ div.div_search{
 		box-shadow: 0 0 15px rgba(0,0,0,0.5);
 	}
 	div.top_menu_button:hover{
-		/* background-color: blue; */
 		color: #000000;
 		box-shadow:inset 0 0 15px rgba(0,0,0,0.5);
 	}
@@ -320,7 +281,6 @@ div.div_search{
 	div.div_one_section_name{
 		border: 1px solid black;
 		font-size: 25pt;
-		/* color: red; */
 		cursor: pointer;
 		height: 40px;
 		box-shadow: 0 0 10px rgba(0,0,0,0.5);
@@ -424,19 +384,6 @@ div.div_search{
 		border-bottom:15px solid transparent;
 		border-top:15px solid transparent;
 	}
-/* div.before_for_sect_name_open{
-	content: '';
-		width: 0px;
-		height: 0px;
-		margin-top: 5px;
-		border-top:30px solid black;
-		border-bottom:15px solid transparent;
-		border-left:15px solid transparent;
-		} */
-/* div.div_one_section_inside_inside{
-	overflow: hidden;
-	transition: 1s;
-	} */
 
 	span.span_top_menu_edit{
 		/* content: '\2626'; */
