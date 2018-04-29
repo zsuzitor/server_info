@@ -400,6 +400,11 @@ function start_search(){
 
 //TODO пока что плохой вариант без комбинаций
 //mass_plus=[];-- массив массивов слов между которыми + стоит
+
+
+//доделать # посмотреть как хранится как ищется должен искать как слово без # + к этому еще и с #
+//возможно баллы поменять что за что дается
+//test  id1 id2 body1+body2
 var search_string=string.value;
 
 if(search_string.indexOf('/')==0){
@@ -420,8 +425,9 @@ for(var i=0;i<mass_words.length;++i){
 		while(++i<mass_words.length&&mass_words[i]=='+'){
 			tmp_mass.push(mass_words[++i]);
 		}
-		if(mass_words[i]=='(')
-			--i;
+		//TODO тут хз не уверен
+		//if(mass_words[i]=='(')
+		//	--i;
 		mass_plus.push(tmp_mass);
 // if(mass_words[++i]!='('&&mass_words[i]!='#'){
 // 	tmp_mass.push(mass_words[i]);
@@ -440,13 +446,14 @@ if(mass_words[i]=='('){
 		tmp_mass.push(mass_words[i]);
 	}
 
-
+	mass_bracket.push(tmp_mass);
 }
 if(mass_words[i]=='#'){
 	mass_tag.push(mass_words[++i]);
 }
 
 }
+//TODO проверить как хранится в массиве и как будет искаться
 for(var i=0;i<mass_bracket.length;++i)
 	summ_mass(find_in_article(mass_bracket[i].join(" "),3));
 for(var i=0;i<mass_plus.length;++i)
@@ -459,8 +466,8 @@ for(var i=0;i<mass_words.length;++i)
 	if(mass_words[i]!='+'&&mass_words[i]!='('&&mass_words[i]!=')'&&mass_words[i]!='#')
 		mass_words_.push(mass_words[i]);
 
-	for(var num_count=1;num_count<mass_words_.length;++num_count){
-		for(var i=0;i<i+num_count<mass_words_.length;++i){
+	for(var num_count=1;num_count<=mass_words_.length;++num_count){
+		for(var i=0;i+num_count<=mass_words_.length;++i){
 			var tmp_mass=[];
 			for(var i2=i;i2<num_count+i;tmp_mass.push(mass_words_[i2++]));
 
@@ -474,11 +481,11 @@ for(var i=0;i<mass_words.length;++i)
 function str_to_mass(str){
 //var res=[];
 //var reg1 = new RegExp("(\w+)(\s*\+\s*|\s*#\s*|\s*(\(.*\))?\s*)", "gi");
-var reg1 = new RegExp("(\w+)(\s*\+\s*)", "gi");
+var reg1 = new RegExp("(\\w+)(\\s*\\+\\s*)", "gi");
 str=str.replace(reg1,'$1 + ');
-reg1 = new RegExp("(\w+)(\s*#\s*)", "gi");
+reg1 = new RegExp("(\\w+)(\\s*#\\s*)", "gi");
 str=str.replace(reg1,'$1 # ');
-reg1 = new RegExp("(\w+)(\s*\(.*?\)\s*)", "gi");
+reg1 = new RegExp("\\s*\\((.*?)\\)\\s*", "gi");//"(\\w+)(\\s*\(.*?\)\\s*)", "gi"
 str=str.replace(reg1,'( $1 )');
 return str.split(' ');
 }
@@ -489,14 +496,15 @@ function find_in_article(str,coef){
 	var mass_not_full=[];
 	for(var i=0;i<mass_full.length;++i){
 		if(mass_full[i].length>4){
-			mass_not_full.push(mass_full[i].substring(0,Math.ceil(mass_full[i].length*0,75)));
+			
+			mass_not_full.push(mass_full[i].substring(0,Math.ceil(mass_full[i].length*0.75)));
 		}
 		else
 			mass_not_full.push(mass_full[i]);
 	}
 	//TODO сейчас ищет только по порядку
-	var not_full_str=mass_not_full.join("\W*");//добавляем бесконечные пробелы и мусор //\S?+
-	var full_str=mass_full.join("\W*");//\S+?   //TODO возможно \\S
+	var not_full_str=mass_not_full.join("\\W*");//добавляем бесконечные пробелы и мусор //\S?+
+	var full_str=mass_full.join("\\W*");//\S+?   //TODO возможно \\S
 	var reg1 = new RegExp(not_full_str, "gi")
 	var reg2 = new RegExp(full_str, "gi")
 
@@ -504,10 +512,14 @@ function find_in_article(str,coef){
 		var obj_for_res={};
 		obj_for_res.Id=mass_article[i].Id;
 //TODO еще по тегам искать
-obj_for_res.Count_head_nof= mass_article[i].Head.match(reg1).length*coef*0.7;
-obj_for_res.Count_head_f= mass_article[i].Head.match(reg2).length*coef;
-obj_for_res.Count_body_nof= mass_article[i].Body.match(reg1).length*coef*0.7*0.7;
-obj_for_res.Count_body_f= mass_article[i].Body.match(reg2).length*coef*0.7;
+var check_null=mass_article[i].Head.match(reg1);
+obj_for_res.Count_head_nof= check_null==null?0:check_null.length*coef*0.5;
+check_null=mass_article[i].Head.match(reg2);
+obj_for_res.Count_head_f= check_null==null?0:check_null.length*coef;
+check_null=mass_article[i].Body.match(reg1);
+obj_for_res.Count_body_nof= check_null==null?0:check_null.length*coef*0.5*0.5;
+check_null=mass_article[i].Body.match(reg2);
+obj_for_res.Count_body_f= check_null==null?0:check_null.length*coef*0.5;
 res.push(obj_for_res);
 }
 return res;
@@ -516,213 +528,218 @@ return res;
 function summ_mass(mass){
 	
 	for(var i=0;i<mass.length;++i){
-		if(main_mass_obj_articles.length==0)
-			main_mass_obj_articles.push(mass[i]);
-		else
-			for(var i2=0;i2<main_mass_obj_articles.length;++i2){
-				if(mass[i].Id==main_mass_obj_articles[i2].Id){
-					main_mass_obj_articles[i2].Count_head_nof=mass[i].Count_head_nof;
-					main_mass_obj_articles[i2].Count_body_nof=mass[i].Count_body_nof;
-					main_mass_obj_articles[i2].Count_head_f=mass[i].Count_head_f;
-					main_mass_obj_articles[i2].Count_body_f=mass[i].Count_body_f;
-				}
+		if(main_mass_obj_articles[i]==undefined){
+
+			main_mass_obj_articles[i]={};
+			main_mass_obj_articles[i].Count_head_nof=0;
+			main_mass_obj_articles[i].Count_body_nof=0;
+			main_mass_obj_articles[i].Count_head_f=0;
+			main_mass_obj_articles[i].Count_body_f=0;
+		}
+		
+			// for(var i2=0;i2<main_mass_obj_articles.length;++i2){
+			// 	if(mass[i].Id==main_mass_obj_articles[i2].Id){
+				main_mass_obj_articles[i].Count_head_nof+=mass[i].Count_head_nof;
+				main_mass_obj_articles[i].Count_body_nof+=mass[i].Count_body_nof;
+				main_mass_obj_articles[i].Count_head_f+=mass[i].Count_head_f;
+				main_mass_obj_articles[i].Count_body_f+=mass[i].Count_body_f;
+				
 			}
 		}
+
+
 	}
-
-
-}
-function click_on_centre_settings(flag){
-	change_x_centre_object.click_change_x_centre=flag;
-	var sett_block=document.getElementById("div_settings_block_id");
-	var left_div=document.getElementById("main_block_left_id");
-	var right_div=document.getElementById("main_block_right_id");
-	if(flag==true){
-		sett_block.style.transition='0s';
-		left_div.style.transition='0s';
-		right_div.style.transition='0s';
-	}
-	else{
-		sett_block.style.transition='1s';
-		left_div.style.transition='1s';
-		right_div.style.transition='1s';
-	}
-}
-
-
-function add_section(){
-	if(last_click_name!=null)
-		if(last_click_name.indexOf('div_one_section_name_')<0)
-			alert('выберите секцию');
-		else{
-			var right_div=document.getElementById("main_block_right_id");
-			var res=add_form_for_add_or_edit(null,1);
-			right_div.innerHTML=res;
-		}
-		else
-			alert('выберите секцию');
-	}
-
-
-	function add_section_form(){
+	function click_on_centre_settings(flag){
+		change_x_centre_object.click_change_x_centre=flag;
+		var sett_block=document.getElementById("div_settings_block_id");
+		var left_div=document.getElementById("main_block_left_id");
 		var right_div=document.getElementById("main_block_right_id");
-		var sect_name_input=document.getElementById("input_for_section_head");
-		var div_save=document.getElementById("div_for_change_info_id");
-		var obj={};
-		obj.Id=+find_maximum_id(mass_section) +1;
-		obj.Parrent_id=last_click_name.split('_')[4];
-		obj.Head=sect_name_input.value;
-		var inside_sect=document.getElementById("div_inside_sections_"+obj.Parrent_id);
-		mass_section.push(obj);
-		var res="";
-		for(var num=0;document.getElementById('save_adds_section_'+num)!=null;++num);
-			res+="<input id='save_adds_section_"+num+"' type='hidden' value='"+obj.Id+"'>";
-		res+="<input id='save_adds_section_parrent_id_"+obj.Id+"' type='hidden' value='"+obj.Parrent_id+"'>";
-		res+="<input id='save_adds_section_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
-		div_save.innerHTML+=res;
-		var tmp="";
-
-		tmp+=str_add_name_section(obj.Id,true);
-		tmp+=load_one_section(obj.Id);
-		inside_sect.innerHTML+=tmp;
-		right_div.innerHTML='';
+		if(flag==true){
+			sett_block.style.transition='0s';
+			left_div.style.transition='0s';
+			right_div.style.transition='0s';
+		}
+		else{
+			sett_block.style.transition='1s';
+			left_div.style.transition='1s';
+			right_div.style.transition='1s';
+		}
 	}
-	function find_maximum_id(mass){
-		var max=null;
-		for(var i=0;i<mass.length;++i)
-			if(max==null||max<mass[i].Id)
-				max=mass[i].Id;
-			return max;
+
+
+	function add_section(){
+		if(last_click_name!=null)
+			if(last_click_name.indexOf('div_one_section_name_')<0)
+				alert('выберите секцию');
+			else{
+				var right_div=document.getElementById("main_block_right_id");
+				var res=add_form_for_add_or_edit(null,1);
+				right_div.innerHTML=res;
+			}
+			else
+				alert('выберите секцию');
 		}
 
-		function add_article(){
-			if(last_click_name!=null)
-				if(last_click_name.indexOf('div_one_section_name_')<0)
-					alert('выберите секцию');
-				else{
+
+		function add_section_form(){
+			var right_div=document.getElementById("main_block_right_id");
+			var sect_name_input=document.getElementById("input_for_section_head");
+			var div_save=document.getElementById("div_for_change_info_id");
+			var obj={};
+			obj.Id=+find_maximum_id(mass_section) +1;
+			obj.Parrent_id=last_click_name.split('_')[4];
+			obj.Head=sect_name_input.value;
+			var inside_sect=document.getElementById("div_inside_sections_"+obj.Parrent_id);
+			mass_section.push(obj);
+			var res="";
+			for(var num=0;document.getElementById('save_adds_section_'+num)!=null;++num);
+				res+="<input id='save_adds_section_"+num+"' type='hidden' value='"+obj.Id+"'>";
+			res+="<input id='save_adds_section_parrent_id_"+obj.Id+"' type='hidden' value='"+obj.Parrent_id+"'>";
+			res+="<input id='save_adds_section_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
+			div_save.innerHTML+=res;
+			var tmp="";
+
+			tmp+=str_add_name_section(obj.Id,true);
+			tmp+=load_one_section(obj.Id);
+			inside_sect.innerHTML+=tmp;
+			right_div.innerHTML='';
+		}
+		function find_maximum_id(mass){
+			var max=null;
+			for(var i=0;i<mass.length;++i)
+				if(max==null||max<mass[i].Id)
+					max=mass[i].Id;
+				return max;
+			}
+
+			function add_article(){
+				if(last_click_name!=null)
+					if(last_click_name.indexOf('div_one_section_name_')<0)
+						alert('выберите секцию');
+					else{
+						var right_div=document.getElementById("main_block_right_id");
+						var res=add_form_for_add_or_edit(null,2)
+						right_div.innerHTML=res;
+					}
+					else
+						alert('выберите секцию');
+				}
+				function add_article_form(){
 					var right_div=document.getElementById("main_block_right_id");
-					var res=add_form_for_add_or_edit(null,2)
-					right_div.innerHTML=res;
-				}
-				else
-					alert('выберите секцию');
-			}
-			function add_article_form(){
-				var right_div=document.getElementById("main_block_right_id");
-				var sect_name_input=document.getElementById("input_for_article_head");
-				var sect_body_input=document.getElementById("input_for_article_body");
-				var div_save=document.getElementById("div_for_change_info_id");
-				var obj={};
-				obj.Id=+find_maximum_id(mass_article) +1;
-				obj.Section_id=+last_click_name.split('_')[4];
-				obj.Head=sect_name_input.value;
-				obj.Body=sect_body_input.value;
-				var inside_sect=document.getElementById("div_inside_articles_"+obj.Section_id);
-				mass_article.push(obj);
-				var res="";
-				for(var num=0;document.getElementById('save_adds_article_'+num)!=null;++num);
-
-					res+="<input id='save_adds_article_"+num+"' type='hidden' value='"+obj.Id+"'>";
-				res+="<input id='save_adds_article_section_id_"+obj.Id+"' type='hidden' value='"+obj.Section_id+"'>";
-				res+="<input id='save_adds_article_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
-				res+="<input id='save_adds_article_body_"+obj.Id+"' type='hidden' value='"+obj.Body+"'>";
-				div_save.innerHTML+=res;
-				var tmp="";
-				tmp+="<div class='div_one_article_name' id='div_one_article_name_"+obj.Id+"' onclick='load_article("+obj.Id+")'>"+obj.Head+"</div>";
-				inside_sect.innerHTML+=tmp;
-				right_div.innerHTML='';
-			}
-
-
-			function dell_select(){
-
-				var id=last_click_name.split('_')[4];
-				if(last_click_name==null){
-					alert("выберите что-то для удаления");
-					return;
-				}
-
-				if(last_click_name.indexOf("div_one_section_name")>=0){
-					delete_section_f(id);
-				}
-				else if(last_click_name.indexOf("div_one_article_name")>=0){
-					delete_article_f(id);
-				}
-				last_click_name=null;
-				document.getElementById("main_block_right_id").innerHTML="";
-			}
-			function delete_section_f(id){
-				var div_save=document.getElementById("div_for_change_info_id");
-				var div=document.getElementById("div_one_section_name_"+id);
-				var div_in=document.getElementById("div_one_section_inside_"+id);
-				if(find_in_mass(id,1)==null)
-					return;
-				for(var i=0;i<mass_article.length;++i)
-					if(mass_article[i].Section_id==id)
-						delete_article_f(mass_article[i--].Id);
-					var tmp_bl=null;
-					for(var i=0;i<mass_section.length;++i){
-						if(mass_section[i].Parrent_id==id){
-							delete_section_f(mass_section[i--].Id);
-						}
-					}
-					if(id==1)
-						return;
-					for(var i=0;i<mass_section.length;++i){
-						if(mass_section[i].Id==id){
-							tmp_bl=mass_section.splice(i, 1);
-							break;
-						}
-					}
-					for(var num=0;document.getElementById('save_delete_section_'+num)!=null;++num);
-						var tmp_str="<input id='save_delete_section_"+num+"' type='hidden' value='"+id+"'>";;
-					div_save.innerHTML+=tmp_str;
-					div.remove();
-					div_in.remove();
-				}
-
-
-				function delete_article_f(id){
+					var sect_name_input=document.getElementById("input_for_article_head");
+					var sect_body_input=document.getElementById("input_for_article_body");
 					var div_save=document.getElementById("div_for_change_info_id");
-					var div=document.getElementById('div_one_article_name_'+id);
-					var tmp_bl=null;
-					for(var i=0;i<mass_article.length;++i){
-						if(mass_article[i].Id==id){
-							tmp_bl=mass_article.splice(i, 1);
-							break;
-						}
-					}
+					var obj={};
+					obj.Id=+find_maximum_id(mass_article) +1;
+					obj.Section_id=+last_click_name.split('_')[4];
+					obj.Head=sect_name_input.value;
+					obj.Body=sect_body_input.value;
+					var inside_sect=document.getElementById("div_inside_articles_"+obj.Section_id);
+					mass_article.push(obj);
+					var res="";
+					for(var num=0;document.getElementById('save_adds_article_'+num)!=null;++num);
 
-					for(var num=0;document.getElementById('save_delete_article_'+num)!=null;++num);
-						var tmp_str="<input id='save_delete_article_"+num+"' type='hidden' value='"+id+"'>";;
-					div_save.innerHTML+=tmp_str;
-					div.remove();
-
+						res+="<input id='save_adds_article_"+num+"' type='hidden' value='"+obj.Id+"'>";
+					res+="<input id='save_adds_article_section_id_"+obj.Id+"' type='hidden' value='"+obj.Section_id+"'>";
+					res+="<input id='save_adds_article_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
+					res+="<input id='save_adds_article_body_"+obj.Id+"' type='hidden' value='"+obj.Body+"'>";
+					div_save.innerHTML+=res;
+					var tmp="";
+					tmp+="<div class='div_one_article_name' id='div_one_article_name_"+obj.Id+"' onclick='load_article("+obj.Id+")'>"+obj.Head+"</div>";
+					inside_sect.innerHTML+=tmp;
+					right_div.innerHTML='';
 				}
 
-				function move_search_div(marginleft){
-					var search_div=document.getElementById("div_search_id");
-					search_div.style.marginLeft = marginleft+'px';
-				}
 
+				function dell_select(){
 
-				function edit_select(){
 					var id=last_click_name.split('_')[4];
 					if(last_click_name==null){
-						alert("выберите что то для редактирования");
+						alert("выберите что-то для удаления");
 						return;
 					}
-					var right_div=document.getElementById("main_block_right_id");
 
-					var res='';
 					if(last_click_name.indexOf("div_one_section_name")>=0){
-						res+=add_form_for_add_or_edit(id,1);
+						delete_section_f(id);
 					}
 					else if(last_click_name.indexOf("div_one_article_name")>=0){
-						res+=add_form_for_add_or_edit(id,2);
+						delete_article_f(id);
 					}
-					right_div.innerHTML=res;
+					last_click_name=null;
+					document.getElementById("main_block_right_id").innerHTML="";
 				}
+				function delete_section_f(id){
+					var div_save=document.getElementById("div_for_change_info_id");
+					var div=document.getElementById("div_one_section_name_"+id);
+					var div_in=document.getElementById("div_one_section_inside_"+id);
+					if(find_in_mass(id,1)==null)
+						return;
+					for(var i=0;i<mass_article.length;++i)
+						if(mass_article[i].Section_id==id)
+							delete_article_f(mass_article[i--].Id);
+						var tmp_bl=null;
+						for(var i=0;i<mass_section.length;++i){
+							if(mass_section[i].Parrent_id==id){
+								delete_section_f(mass_section[i--].Id);
+							}
+						}
+						if(id==1)
+							return;
+						for(var i=0;i<mass_section.length;++i){
+							if(mass_section[i].Id==id){
+								tmp_bl=mass_section.splice(i, 1);
+								break;
+							}
+						}
+						for(var num=0;document.getElementById('save_delete_section_'+num)!=null;++num);
+							var tmp_str="<input id='save_delete_section_"+num+"' type='hidden' value='"+id+"'>";;
+						div_save.innerHTML+=tmp_str;
+						div.remove();
+						div_in.remove();
+					}
+
+
+					function delete_article_f(id){
+						var div_save=document.getElementById("div_for_change_info_id");
+						var div=document.getElementById('div_one_article_name_'+id);
+						var tmp_bl=null;
+						for(var i=0;i<mass_article.length;++i){
+							if(mass_article[i].Id==id){
+								tmp_bl=mass_article.splice(i, 1);
+								break;
+							}
+						}
+
+						for(var num=0;document.getElementById('save_delete_article_'+num)!=null;++num);
+							var tmp_str="<input id='save_delete_article_"+num+"' type='hidden' value='"+id+"'>";;
+						div_save.innerHTML+=tmp_str;
+						div.remove();
+
+					}
+
+					function move_search_div(marginleft){
+						var search_div=document.getElementById("div_search_id");
+						search_div.style.marginLeft = marginleft+'px';
+					}
+
+
+					function edit_select(){
+						var id=last_click_name.split('_')[4];
+						if(last_click_name==null){
+							alert("выберите что то для редактирования");
+							return;
+						}
+						var right_div=document.getElementById("main_block_right_id");
+
+						var res='';
+						if(last_click_name.indexOf("div_one_section_name")>=0){
+							res+=add_form_for_add_or_edit(id,1);
+						}
+						else if(last_click_name.indexOf("div_one_article_name")>=0){
+							res+=add_form_for_add_or_edit(id,2);
+						}
+						right_div.innerHTML=res;
+					}
 function add_form_for_add_or_edit(id ,type){//1 секция 2 статья
 	var res='';
 	switch (type) {
