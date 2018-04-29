@@ -29,6 +29,8 @@ hidden_search_block show_search_block мб не нужен и тот что ря
 
 после редактирования проверять изменилось ли что то  и после этого решать отправлять ли на сервер
 добавить облако тегов его редактирование сохранение хранение и поиск по ним
+
+теги просто прикрутить в body в конце например
 +++++++
 //передавать в шарп в json строке всю инфу которая нужна
 //html сейчас не отображается
@@ -379,7 +381,7 @@ function start_search(){
 //3 за каждую пару слов которая рядом стоит -0.5
 //4 за #тег среди тегов - смотрим 1п и 2п +0.5
 //5 за (слово) -смотрим 1п и 2п +1
-
+//определять еще вероятность по длине(тип чем короче статья и больше повторений тем больше вероятность что это именно та) (соотношение найдено/длина статьи)
 
 //если есть слово с # искать по облаку тегов именно это слово и ему большой приоритет
 //(слово) больший приоритет
@@ -390,24 +392,98 @@ function start_search(){
 //find_in_article поправить и там умножать если слова не полные найдены и если их несколько в массиве умножать на коэф*количество слов
 //добавить секции
 //добавить спецсомволы
+
+
+//TODO для + парсить по + потом куски по ' ' и уже с этим работать
+//в строке ' + ' менять на '+' или наоборот и работать с этим
+
+
+//TODO пока что плохой вариант без комбинаций
+//mass_plus=[];-- массив массивов слов между которыми + стоит
 var search_string=string.value;
-var mass_words=search_string.split(" ");
+
+if(search_string.indexOf('/')==0){
+	//TODO искать по секциям
+	search_string.splice(0,1);
+}
+var mass_words=str_to_mass(search_string);
+//var mass_words=search_string.split(" ");
 var main_mass_obj_articles=[];
+var mass_bracket=[];
+var mass_plus=[];
+var mass_tag=[];
+for(var i=0;i<mass_words.length;++i){
+	if(mass_words[i]=='+'){
+		var tmp_mass=[];
+		tmp_mass.push(mass_words[i-1]);
+		tmp_mass.push(mass_words[++i]);
+		while(++i<mass_words.length&&mass_words[i]=='+'){
+			tmp_mass.push(mass_words[++i]);
+		}
+		if(mass_words[i]=='(')
+			--i;
+		mass_plus.push(tmp_mass);
+// if(mass_words[++i]!='('&&mass_words[i]!='#'){
+// 	tmp_mass.push(mass_words[i]);
+// 	while(){
 
+// 		}
 
+// }
 
-for(var num_count=1;num_count<mass_words.length;++num_count){
-for(var i=0;i<i+num_count<mass_words.length;++i){
-var tmp_mass=[];
-for(var i2=i;i2<num_count+i;tmp_mass.push(mass_words[i2++]));
-
-summ_mass(find_in_article(tmp_mass.join(" ")));
 
 }
+if(mass_words[i]=='('){
+	var tmp_mass=[];
+	tmp_mass.push(mass_words[++i]);
+	while(++i<mass_words.length&&mass_words[i]!=')'){
+		tmp_mass.push(mass_words[i]);
+	}
 
+
+}
+if(mass_words[i]=='#'){
+	mass_tag.push(mass_words[++i]);
+}
+
+}
+for(var i=0;i<mass_bracket.length;++i)
+	summ_mass(find_in_article(mass_bracket[i].join(" "),3));
+for(var i=0;i<mass_plus.length;++i)
+	summ_mass(find_in_article(mass_plus[i].join(" "),1.5));
+
+
+//--?
+var mass_words_=[];
+for(var i=0;i<mass_words.length;++i)
+	if(mass_words[i]!='+'&&mass_words[i]!='('&&mass_words[i]!=')'&&mass_words[i]!='#')
+		mass_words_.push(mass_words[i]);
+
+	for(var num_count=1;num_count<mass_words_.length;++num_count){
+		for(var i=0;i<i+num_count<mass_words_.length;++i){
+			var tmp_mass=[];
+			for(var i2=i;i2<num_count+i;tmp_mass.push(mass_words_[i2++]));
+
+				summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length));
+
+		}
+
+	}
+
+// к нижнему регистру
+function str_to_mass(str){
+//var res=[];
+//var reg1 = new RegExp("(\w+)(\s*\+\s*|\s*#\s*|\s*(\(.*\))?\s*)", "gi");
+var reg1 = new RegExp("(\w+)(\s*\+\s*)", "gi");
+str=str.replace(reg1,'$1 + ');
+reg1 = new RegExp("(\w+)(\s*#\s*)", "gi");
+str=str.replace(reg1,'$1 # ');
+reg1 = new RegExp("(\w+)(\s*\(.*?\)\s*)", "gi");
+str=str.replace(reg1,'( $1 )');
+return str.split(' ');
 }
 //массив объектов с id статьи и предварительными баллами за каждый раздел
-function find_in_article(str){
+function find_in_article(str,coef){
 	var res=[];
 	var mass_full=str.split(" ");
 	var mass_not_full=[];
@@ -418,19 +494,20 @@ function find_in_article(str){
 		else
 			mass_not_full.push(mass_full[i]);
 	}
-	var not_full_str=mass_not_full.join("\S*\s");
-	var full_str=mass_full.join("\S*\s");//TODO возможно \\S
-	var reg1 = new RegExp(not_full_str, "g")
-	var reg2 = new RegExp(full_str, "g")
+	//TODO сейчас ищет только по порядку
+	var not_full_str=mass_not_full.join("\W*");//добавляем бесконечные пробелы и мусор //\S?+
+	var full_str=mass_full.join("\W*");//\S+?   //TODO возможно \\S
+	var reg1 = new RegExp(not_full_str, "gi")
+	var reg2 = new RegExp(full_str, "gi")
 
 	for(var i=0;i<mass_article.length;++i){
 		var obj_for_res={};
 		obj_for_res.Id=mass_article[i].Id;
 //TODO еще по тегам искать
-obj_for_res.Count_head= mass_article[i].Head.match(reg1).length;
-obj_for_res.Count_head+= mass_article[i].Head.match(reg2).length;
-obj_for_res.Count_body= mass_article[i].Body.match(reg1).length;
-obj_for_res.Count_body+= mass_article[i].Body.match(reg2).length;
+obj_for_res.Count_head_nof= mass_article[i].Head.match(reg1).length*coef*0.7;
+obj_for_res.Count_head_f= mass_article[i].Head.match(reg2).length*coef;
+obj_for_res.Count_body_nof= mass_article[i].Body.match(reg1).length*coef*0.7*0.7;
+obj_for_res.Count_body_f= mass_article[i].Body.match(reg2).length*coef*0.7;
 res.push(obj_for_res);
 }
 return res;
@@ -444,8 +521,10 @@ function summ_mass(mass){
 		else
 			for(var i2=0;i2<main_mass_obj_articles.length;++i2){
 				if(mass[i].Id==main_mass_obj_articles[i2].Id){
-					main_mass_obj_articles[i2].Count_head=mass[i].Count_head;
-					main_mass_obj_articles[i2].Count_body=mass[i].Count_body;
+					main_mass_obj_articles[i2].Count_head_nof=mass[i].Count_head_nof;
+					main_mass_obj_articles[i2].Count_body_nof=mass[i].Count_body_nof;
+					main_mass_obj_articles[i2].Count_head_f=mass[i].Count_head_f;
+					main_mass_obj_articles[i2].Count_body_f=mass[i].Count_body_f;
 				}
 			}
 		}
