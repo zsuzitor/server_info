@@ -31,6 +31,15 @@ hidden_search_block show_search_block мб не нужен и тот что ря
 добавить облако тегов его редактирование сохранение хранение и поиск по ним
 
 теги просто прикрутить в body в конце например
+до поиска сохранять innerHTML и после нажатия на домик возвращать его, но это плохо тк если что то редактировать удалять то будет старое отображение
+{
+ПОИСК ДОЛЖЕН ПРИОРИТЕТНО ВЫПОЛНЯТЬСЯ В ВЫБРАННОМ РАЗДЕЛЕ
+сейчас поиск только по том что в выбранной секции/статье  и показывает только inside а нужно после разделителя показывать и остальное
+^^^^ возможно задавать коэфициент и чем секция выше по уровню тем ниже коэф
+типо для секции ~50 для родителя 40 для родителя родителя 30 и тдтдтд 
+}
+переписать js под callbackи
+
 +++++++
 //передавать в шарп в json строке всю инфу которая нужна
 //html сейчас не отображается
@@ -405,6 +414,10 @@ function start_search(){
 //доделать # посмотреть как хранится как ищется должен искать как слово без # + к этому еще и с #
 //возможно баллы поменять что за что дается
 //test  id1 id2 body1+body2
+
+
+
+//TODOTODOTODO ПОИСК ДОЛЖЕН ПРИОРИТЕТНО ВЫПОЛНЯТЬСЯ В ВЫБРАННОМ РАЗДЕЛЕ
 var search_string=string.value;
 
 if(search_string.indexOf('/')==0){
@@ -461,6 +474,11 @@ for(var i=0;i<mass_plus.length;++i)
 
 
 //--?
+//
+//find_child_section(id,article==true)
+
+
+
 var mass_words_=[];
 for(var i=0;i<mass_words.length;++i)
 	if(mass_words[i]!='+'&&mass_words[i]!='('&&mass_words[i]!=')'&&mass_words[i]!='#')
@@ -471,12 +489,59 @@ for(var i=0;i<mass_words.length;++i)
 			var tmp_mass=[];
 			for(var i2=i;i2<num_count+i;tmp_mass.push(mass_words_[i2++]));
 
-				summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length));
+				summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length,find_child_section((function(){
+					if(last_click_name==null)
+						return 1;
+					if(last_click_name.indexOf('div_one_section_name_')==0)
+						return last_click_name.split('_')[4];
+					else{
+						return find_in_mass(last_click_name.split('_')[4],2).Section_id;
+					}
+
+					
+				})(),true)));
+
 
 		}
 
 	}
+	main_mass_obj_articles.sort(function(a, b) {
 
+		var sum_a=a.Count_head_nof;
+		sum_a+=a.Count_body_nof;
+		sum_a+=a.Count_head_f;
+		sum_a+=a.Count_body_f;
+		var sum_b=b.Count_head_nof;
+		sum_b+=b.Count_body_nof;
+		sum_b+=b.Count_head_f;
+		sum_b+=b.Count_body_f;
+		if (sum_a < sum_b) return 1;
+		if (sum_a > sum_b) return -1;
+	});
+
+	var div_left=document.getElementById("main_block_left_id");
+	var res_for_div_left="";
+	res_for_div_left+='<div class="div_one_section_name" onclick="click_name_section(this)" id="div_one_section_name_ar">'+
+	'<div id="before_for_sect_name_ar" class="before_for_sect_name div_inline_block"></div>'+
+	'<div class="div_inline_block" id="div_one_section_name_text_ar">Статьи</div></div>';
+
+	res_for_div_left+='<div style="display: inline-block;" class="div_one_section_inside_cl" id="div_one_section_inside_ar">'+
+	'<div class="div_one_section_inside_inside" id="div_one_section_inside_inside_ar">';
+	res_for_div_left+="<div class='div_inside_articles' id='div_inside_articles_ar'>";
+	
+	for(var i=0;i<main_mass_obj_articles.length;++i){
+		res_for_div_left+='<div class="div_one_article_name" id="div_one_article_name_'+
+		main_mass_obj_articles[i].Id+'" onclick="load_article('+main_mass_obj_articles[i].Id+')">'+main_mass_obj_articles[i].Head+'</div>';
+	}
+	res_for_div_left+="</div></div>";
+//TODO тут еще и секции
+res_for_div_left+='<div class="div_inside_sections" id="div_inside_sections_ar"></div>';
+
+
+res_for_div_left+='</div>';
+//tmp+="<div class='div_one_article_name' id='div_one_article_name_"+obj.Id+"' onclick='load_article("+obj.Id+")'>"+obj.Head+"</div>";
+//alert(res_for_div_left);
+div_left.innerHTML=res_for_div_left;
 // к нижнему регистру
 function str_to_mass(str){
 //var res=[];
@@ -490,10 +555,15 @@ str=str.replace(reg1,'( $1 )');
 return str.split(' ');
 }
 //массив объектов с id статьи и предварительными баллами за каждый раздел
-function find_in_article(str,coef){
+function find_in_article(str,coef,mass){
 	var res=[];
 	var mass_full=str.split(" ");
 	var mass_not_full=[];
+	var mass_for_search_article=null;
+	if(mass&&mass.length>0)
+		mass_for_search_article=mass;
+	else
+		mass_for_search_article=mass_article;
 	for(var i=0;i<mass_full.length;++i){
 		if(mass_full[i].length>4){
 			
@@ -508,17 +578,18 @@ function find_in_article(str,coef){
 	var reg1 = new RegExp(not_full_str, "gi")
 	var reg2 = new RegExp(full_str, "gi")
 
-	for(var i=0;i<mass_article.length;++i){
+	for(var i=0;i<mass_for_search_article.length;++i){
 		var obj_for_res={};
-		obj_for_res.Id=mass_article[i].Id;
+		obj_for_res.Id=mass_for_search_article[i].Id;
 //TODO еще по тегам искать
-var check_null=mass_article[i].Head.match(reg1);
+var check_null=mass_for_search_article[i].Head.match(reg1);
+obj_for_res.Head=mass_for_search_article[i].Head;
 obj_for_res.Count_head_nof= check_null==null?0:check_null.length*coef*0.5;
-check_null=mass_article[i].Head.match(reg2);
+check_null=mass_for_search_article[i].Head.match(reg2);
 obj_for_res.Count_head_f= check_null==null?0:check_null.length*coef;
-check_null=mass_article[i].Body.match(reg1);
+check_null=mass_for_search_article[i].Body.match(reg1);
 obj_for_res.Count_body_nof= check_null==null?0:check_null.length*coef*0.5*0.5;
-check_null=mass_article[i].Body.match(reg2);
+check_null=mass_for_search_article[i].Body.match(reg2);
 obj_for_res.Count_body_f= check_null==null?0:check_null.length*coef*0.5;
 res.push(obj_for_res);
 }
@@ -531,6 +602,8 @@ function summ_mass(mass){
 		if(main_mass_obj_articles[i]==undefined){
 
 			main_mass_obj_articles[i]={};
+			main_mass_obj_articles[i].Head=mass[i].Head;
+			main_mass_obj_articles[i].Id=mass[i].Id;
 			main_mass_obj_articles[i].Count_head_nof=0;
 			main_mass_obj_articles[i].Count_body_nof=0;
 			main_mass_obj_articles[i].Count_head_f=0;
@@ -805,6 +878,15 @@ function edit_select_article_form(id){
 }
 
 
+function home_button_return_left(){
+	var left_div=document.getElementById("main_block_left_id");
+	var str_res_for_left_ul=load_one_section(1);
+	left_div.innerHTML=str_add_name_section(1,true)+str_res_for_left_ul;
+
+}
+
+
+
 function convert_string(str){
 	var res="";
 	res=str.replace(/</g,'&lt;');
@@ -813,7 +895,31 @@ function convert_string(str){
 return res;
 }
 
-function save_server_db(){
+function find_child_section(id,article){
+	var res='';
+	for(var i=0;i<mass_section.length;++i){
+		if(mass_section[i].Parrent_id==id){
+			res+=mass_section[i].Id;
+			res+="_"+find_child_section(mass_section[i].Id);
+		}
+	}
+	if(article==true){
+		var not_res_a=(res+'_'+id).split('_');
+		var res_a=[];
+
+		for(var i=0;i<not_res_a.length;++i)
+			if(not_res_a[i]!='')
+				for(var i2=0;i2<mass_article.length;++i2)
+					if(mass_article[i2].Section_id==not_res_a[i])
+						res_a.push(mass_article[i2]);
+
+					return res_a;
+				}
+				return res;
+
+			}
+
+			function save_server_db(){
 	//
 // save_edit_article_ по счетчику смотрю id и по id беру данные в  save_edit_article_id_head_+id   save_edit_article_id_body_+id
 // save_edit_section_ по счетчику смотрю id и по id беру данные в  save_edit_section_id_head_+id  
