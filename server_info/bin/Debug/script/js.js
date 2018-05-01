@@ -831,11 +831,12 @@ function add_section(){
 			function dell_select(){
 				if(!confirm("Удалить выбранное со всеми вложениями?"))
 					return;
-				var id=last_click_name.split('_')[4];
+				
 				if(last_click_name==null){
 					alert("выберите что-то для удаления");
 					return;
 				}
+				var id=last_click_name.split('_')[4];
 				document.getElementById("main_block_right_id").innerHTML="";
 				if(last_click_name.indexOf("div_one_section_name")>=0){
 					delete_section_f(id);
@@ -903,11 +904,12 @@ function add_section(){
 
 
 				function edit_select(){
-					var id=last_click_name.split('_')[4];
+					
 					if(last_click_name==null){
-						alert("выберите что то для редактирования");
+						alert("выберите что-то для редактирования");
 						return;
 					}
+					var id=last_click_name.split('_')[4];
 					var right_div=document.getElementById("main_block_right_id");
 
 					var res='';
@@ -996,6 +998,7 @@ function edit_select_article_form(id){
 	div_save.innerHTML+=tmp_str;
 }
 function close_reload_list(){
+
 	document.getElementById("main_block_right_id").innerHTML="";
 	for(var i=0;i<mass_section_open.length;++i){
 		
@@ -1005,7 +1008,7 @@ function close_reload_list(){
 		mass_section_open[i].open=true;
 		click_name_section(check);
 	}
-
+	last_click_name=null;
 }
 
 function home_button_return_left(){
@@ -1017,6 +1020,7 @@ function home_button_return_left(){
 		mass_section_open[i].open=!mass_section_open[i].open;
 		click_name_section(document.getElementById("div_one_section_name_"+mass_section_open[i].Id));
 	}
+	last_click_name=null;
 }
 
 
