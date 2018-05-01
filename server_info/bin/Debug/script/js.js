@@ -32,7 +32,7 @@ hidden_search_block show_search_block мб не нужен и тот что ря
 добавить облако тегов его редактирование сохранение хранение и поиск по ним
 теги просто прикрутить в body в конце например
 }
-до поиска сохранять innerHTML и после нажатия на домик возвращать его, но это плохо тк если что то редактировать удалять то будет старое отображение
+//до поиска сохранять innerHTML и после нажатия на домик возвращать его, но это плохо тк если что то редактировать удалять то будет старое отображение
 поиск по облаку тегов(если юзер не указал #) оценку делать ниже чем у head но выше чем у body если указал то выше чем у body
 {
 //ПОИСК ДОЛЖЕН ПРИОРИТЕТНО ВЫПОЛНЯТЬСЯ В ВЫБРАННОМ РАЗДЕЛЕ
@@ -40,7 +40,12 @@ hidden_search_block show_search_block мб не нужен и тот что ря
 ^^^^ возможно задавать коэфициент и чем секция выше по уровню тем ниже коэф
 типо для секции ~50 для родителя 40 для родителя родителя 30 и тдтдтд 
 }
+при поиске не отображать статьи у которых 0 баллов
 переписать js под callbackи
+//кнопка для закрытия всех секций
+везде где циклы делать досрочный выход из них, типо оптимизация
+
+
 
 +++++++
 //при удалении спрашивать подтверждение??
@@ -102,7 +107,7 @@ var client_heigth=0;
 		var mass_section=null;
 		var mass_article=null;
 		var last_click_name=null;
-
+		var mass_section_open=[];
 
 		if (document.addEventListener){
 			document.addEventListener("DOMContentLoaded", page_first_start);
@@ -187,6 +192,9 @@ function page_first_start(){
 
 	mass_section=JSON.parse(document.getElementById("string_base_info_sections").value);
 	mass_article=JSON.parse(document.getElementById("string_base_info_articles").value);
+	for(var i=0;i<mass_section.length;++i)
+		mass_section_open.push({Id: mass_section[i].Id,open: false});
+	
 	var str_res_for_left_ul=load_one_section(1);
 	left_div.innerHTML=str_add_name_section(1,true)+str_res_for_left_ul;
 	document.getElementById("div_for_base_info_id").innerHTML="";
@@ -265,73 +273,104 @@ function find_in_mass(id,type_mass){//1--секция 2--артикл
 			var num_id=a.id.split('_')[4];
 			var div=document.getElementById("div_one_section_inside_"+num_id);
 			var before_d=document.getElementById("before_for_sect_name_"+num_id);
-			if(div.style.display==''||div.style.display=='inline-block'){
-				before_d.style.borderLeft='30px solid black';
-				before_d.style.borderBottom='15px solid transparent';
-				before_d.style.borderTop='15px solid transparent';
-				div.style.display='none';
-			}
-			else{
-				var div_in_sec=document.getElementById("div_inside_sections_"+num_id);
-				var div_in_art=document.getElementById("div_inside_articles_"+num_id);
-				before_d.style.borderTop='30px solid black';
-				before_d.style.borderRight='15px solid transparent';
-				before_d.style.borderLeft='15px solid transparent';
-				if(div_in_sec.innerHTML!=''||div_in_art.innerHTML!='')
-					div.style.display='inline-block';
-			}
-		}
+			var sec_=null;
+			for(var i=0;i<mass_section_open.length;++i)
+				if(mass_section_open[i].Id==num_id)
+					sec_=mass_section_open[i];
+				var f1_=function(){
+					before_d.style.borderLeft='30px solid black';
+					before_d.style.borderBottom='15px solid transparent';
+					before_d.style.borderTop='15px solid transparent';
+					div.style.display='none';
+				};
 
-
-		function load_article(id_ar){
-			var acticle=null;
-			select_view_line('div_one_article_name_'+id_ar);
-			for(var i=0;i<mass_article.length;++i)
-				if(mass_article[i].Id==id_ar){
-					acticle=mass_article[i];
-					break;
-				}
-				var res="";
-				var right_div=document.getElementById("main_block_right_id");
-				res="<div>";
-				res+="<h1><pre>";
-				res+=convert_string(acticle.Head);
-				res+="</pre><h1>";
-				res+="<div><pre>";
-				res+=convert_string(acticle.Body);
-				res+="</pre></div>";
-				res+="</div>";
-				right_div.innerHTML=res;
-			}
-
-			function show_top_menu(){
-				var top_menu=document.getElementById("div_for_top_menu_id");
-				top_menu.style.left ="0";
-				var ch=document.getElementById("div_settings_bottom_b_ex");
-				ch.innerHTML="<div class='div_settings_top_b' onclick='hidden_top_menu()'></div>";
-			}
-
-
-			function hidden_top_menu(){
-				var top_menu=document.getElementById("div_for_top_menu_id");
-				top_menu.style.left="-70px";
-				var ch=document.getElementById("div_settings_bottom_b_ex");
-				ch.innerHTML="<div class='div_settings_bottom_b' onclick='show_top_menu()'></div>";
-			}
-
-
-			function show_left_menu(){
-				var left_div=document.getElementById("main_block_left_id");
-				var setting_div=document.getElementById("div_settings_block_id");
-				if(left_div.style.display == 'none'){
-					left_div.style.display = 'block';
-					change_centre(x_centre);
-					move_search_div(0);
+				var f2_=function(){
+					var div_in_sec=document.getElementById("div_inside_sections_"+num_id);
+					var div_in_art=document.getElementById("div_inside_articles_"+num_id);
+					before_d.style.borderTop='30px solid black';
+					before_d.style.borderRight='15px solid transparent';
+					before_d.style.borderLeft='15px solid transparent';
+					if(div_in_sec.innerHTML!=''||div_in_art.innerHTML!=''){
+						div.style.display='inline-block';
+						if(sec_!=null)
+							sec_.open=true;
+					}
+				};
+				if(sec_==null){
+					if(div.style.display==''||div.style.display=='inline-block'){
+						f1_();
+					}
+					else{
+						f2_();
+					}
 				}
 				else{
-					change_centre(client_width-setting_div.offsetWidth/2);
+					if(sec_.open){
+						sec_.open=false;
+						f1_();
+
+					}
+					else{
+						//sec_.open=true;
+						f2_();
+
+					}
 				}
+
+
+
 			}
+
+
+			function load_article(id_ar){
+				var acticle=null;
+				select_view_line('div_one_article_name_'+id_ar);
+				for(var i=0;i<mass_article.length;++i)
+					if(mass_article[i].Id==id_ar){
+						acticle=mass_article[i];
+						break;
+					}
+					var res="";
+					var right_div=document.getElementById("main_block_right_id");
+					res="<div>";
+					res+="<h1><pre>";
+					res+=convert_string(acticle.Head);
+					res+="</pre><h1>";
+					res+="<div><pre>";
+					res+=convert_string(acticle.Body);
+					res+="</pre></div>";
+					res+="</div>";
+					right_div.innerHTML=res;
+				}
+
+				function show_top_menu(){
+					var top_menu=document.getElementById("div_for_top_menu_id");
+					top_menu.style.left ="0";
+					var ch=document.getElementById("div_settings_bottom_b_ex");
+					ch.innerHTML="<div class='div_settings_top_b' onclick='hidden_top_menu()'></div>";
+				}
+
+
+				function hidden_top_menu(){
+					var top_menu=document.getElementById("div_for_top_menu_id");
+					top_menu.style.left="-70px";
+					var ch=document.getElementById("div_settings_bottom_b_ex");
+					ch.innerHTML="<div class='div_settings_bottom_b' onclick='show_top_menu()'></div>";
+				}
+
+
+				function show_left_menu(){
+					var left_div=document.getElementById("main_block_left_id");
+					var setting_div=document.getElementById("div_settings_block_id");
+					if(left_div.style.display == 'none'){
+						left_div.style.display = 'block';
+						change_centre(x_centre);
+						move_search_div(0);
+					}
+					else{
+						change_centre(client_width-setting_div.offsetWidth/2);
+					}
+				}
 
 
 function change_centre(coord){//координата от левого края  //change_var   
@@ -472,26 +511,30 @@ if(mass_words[i]=='#'){
 }
 
 var click_sect_id=(function(){
-					if(last_click_name==null)
-						return 1;
-					if(last_click_name.indexOf('div_one_section_name_')==0)
-						return last_click_name.split('_')[4];
-					else{
-						return find_in_mass(last_click_name.split('_')[4],2).Section_id;
-					}
+	if(last_click_name==null)
+		return 1;
+	if(last_click_name.indexOf('div_one_section_name_')==0)
+		return last_click_name.split('_')[4];
+	else{
+		return find_in_mass(last_click_name.split('_')[4],2).Section_id;
+	}
 
-					
+
 				})();//или родителя статьи
 
 //TODO проверить как хранится в массиве и как будет искаться
 for(var i=0;i<mass_bracket.length;++i){
 	summ_mass(find_in_article(mass_bracket[i].join(" "),3),true);
-	summ_mass(find_in_article(mass_bracket[i].join(" "),3,find_child_section(click_sect_id,true)),false);
+	var mm=find_child_section(click_sect_id,true);
+	if(mm&&mm.length>0&&click_sect_id>1)
+		summ_mass(find_in_article(mass_bracket[i].join(" "),3,mm),false);
 }
 for(var i=0;i<mass_plus.length;++i){
 
 	summ_mass(find_in_article(mass_plus[i].join(" "),1.5),true);
-	summ_mass(find_in_article(mass_plus[i].join(" "),1.5,find_child_section(click_sect_id,true)),true);
+	var mm=find_child_section(click_sect_id,true);
+	if(mm&&mm.length>0&&click_sect_id>1)
+		summ_mass(find_in_article(mass_plus[i].join(" "),1.5,mm),true);
 }
 
 
@@ -510,8 +553,10 @@ for(var i=0;i<mass_words.length;++i)
 		for(var i=0;i+num_count<=mass_words_.length;++i){
 			var tmp_mass=[];
 			for(var i2=i;i2<num_count+i;tmp_mass.push(mass_words_[i2++]));
-summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length),false);
-				summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length,find_child_section(click_sect_id,true)),true);
+				summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length),false);
+			var mm=find_child_section(click_sect_id,true);
+			if(mm&&mm.length>0&&click_sect_id>1)
+				summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length,mm),true);
 
 
 		}
@@ -548,12 +593,12 @@ summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length),false);
 		main_mass_obj_articles[i].Id+'" onclick="load_article('+main_mass_obj_articles[i].Id+')">'+main_mass_obj_articles[i].Head+'</div>';
 	}
 	res_for_div_left+="</div></div>";
-res_for_div_left+='<div class="div_inside_sections" id="div_inside_sections_ar"></div>';
-res_for_div_left+='</div>';
+	res_for_div_left+='<div class="div_inside_sections" id="div_inside_sections_ar"></div>';
+	res_for_div_left+='</div>';
 
-res_for_div_left+='<div class="div_one_section_name" onclick="click_name_section(this)" id="div_one_section_name_arall">'+
+	res_for_div_left+='<div class="div_one_section_name" onclick="click_name_section(this)" id="div_one_section_name_arall">'+
 	'<div id="before_for_sect_name_arall" class="before_for_sect_name div_inline_block"></div>'+
-	'<div class="div_inline_block" id="div_one_section_name_text_arall">Статьи по всей БД</div></div>';
+	'<div class="div_inline_block" id="div_one_section_name_text_arall">Все статьи</div></div>';
 
 	res_for_div_left+='<div style="display: inline-block;" class="div_one_section_inside_cl" id="div_one_section_inside_arall">'+
 	'<div class="div_one_section_inside_inside" id="div_one_section_inside_inside_arall">';
@@ -564,8 +609,8 @@ res_for_div_left+='<div class="div_one_section_name" onclick="click_name_section
 		not_main_mass_obj_articles[i].Id+'" onclick="load_article('+not_main_mass_obj_articles[i].Id+')">'+not_main_mass_obj_articles[i].Head+'</div>';
 	}
 	res_for_div_left+="</div></div>";
-res_for_div_left+='<div class="div_inside_sections" id="div_inside_sections_arall"></div>';
-res_for_div_left+='</div>';
+	res_for_div_left+='<div class="div_inside_sections" id="div_inside_sections_arall"></div>';
+	res_for_div_left+='</div>';
 
 //TODO тут еще и секции
 
@@ -632,18 +677,18 @@ return res;
 function summ_mass(mass,inside){
 	if(inside==true){
 		for(var i=0;i<mass.length;++i){
-		if(main_mass_obj_articles[i]==undefined){
+			if(main_mass_obj_articles[i]==undefined){
 
-			main_mass_obj_articles[i]={};
-			main_mass_obj_articles[i].inside=inside;
-			main_mass_obj_articles[i].Head=mass[i].Head;
-			main_mass_obj_articles[i].Id=mass[i].Id;
-			main_mass_obj_articles[i].Count_head_nof=0;
-			main_mass_obj_articles[i].Count_body_nof=0;
-			main_mass_obj_articles[i].Count_head_f=0;
-			main_mass_obj_articles[i].Count_body_f=0;
-		}
-		
+				main_mass_obj_articles[i]={};
+				main_mass_obj_articles[i].inside=inside;
+				main_mass_obj_articles[i].Head=mass[i].Head;
+				main_mass_obj_articles[i].Id=mass[i].Id;
+				main_mass_obj_articles[i].Count_head_nof=0;
+				main_mass_obj_articles[i].Count_body_nof=0;
+				main_mass_obj_articles[i].Count_head_f=0;
+				main_mass_obj_articles[i].Count_body_f=0;
+			}
+
 			// for(var i2=0;i2<main_mass_obj_articles.length;++i2){
 			// 	if(mass[i].Id==main_mass_obj_articles[i2].Id){
 				main_mass_obj_articles[i].Count_head_nof+=mass[i].Count_head_nof;
@@ -652,21 +697,21 @@ function summ_mass(mass,inside){
 				main_mass_obj_articles[i].Count_body_f+=mass[i].Count_body_f;
 				
 			}
-	}
-	else{
-		for(var i=0;i<mass.length;++i){
-		if(not_main_mass_obj_articles[i]==undefined){
-
-			not_main_mass_obj_articles[i]={};
-			not_main_mass_obj_articles[i].inside=inside;
-			not_main_mass_obj_articles[i].Head=mass[i].Head;
-			not_main_mass_obj_articles[i].Id=mass[i].Id;
-			not_main_mass_obj_articles[i].Count_head_nof=0;
-			not_main_mass_obj_articles[i].Count_body_nof=0;
-			not_main_mass_obj_articles[i].Count_head_f=0;
-			not_main_mass_obj_articles[i].Count_body_f=0;
 		}
-		
+		else{
+			for(var i=0;i<mass.length;++i){
+				if(not_main_mass_obj_articles[i]==undefined){
+
+					not_main_mass_obj_articles[i]={};
+					not_main_mass_obj_articles[i].inside=inside;
+					not_main_mass_obj_articles[i].Head=mass[i].Head;
+					not_main_mass_obj_articles[i].Id=mass[i].Id;
+					not_main_mass_obj_articles[i].Count_head_nof=0;
+					not_main_mass_obj_articles[i].Count_body_nof=0;
+					not_main_mass_obj_articles[i].Count_head_f=0;
+					not_main_mass_obj_articles[i].Count_body_f=0;
+				}
+
 			// for(var i2=0;i2<main_mass_obj_articles.length;++i2){
 			// 	if(mass[i].Id==main_mass_obj_articles[i2].Id){
 				not_main_mass_obj_articles[i].Count_head_nof+=mass[i].Count_head_nof;
@@ -675,210 +720,211 @@ function summ_mass(mass,inside){
 				not_main_mass_obj_articles[i].Count_body_f+=mass[i].Count_body_f;
 				
 			}
-	}
-	
 		}
 
-
 	}
-	function click_on_centre_settings(flag){
-		change_x_centre_object.click_change_x_centre=flag;
-		var sett_block=document.getElementById("div_settings_block_id");
-		var left_div=document.getElementById("main_block_left_id");
-		var right_div=document.getElementById("main_block_right_id");
-		if(flag==true){
-			sett_block.style.transition='0s';
-			left_div.style.transition='0s';
-			right_div.style.transition='0s';
-		}
+
+
+}
+function click_on_centre_settings(flag){
+	change_x_centre_object.click_change_x_centre=flag;
+	var sett_block=document.getElementById("div_settings_block_id");
+	var left_div=document.getElementById("main_block_left_id");
+	var right_div=document.getElementById("main_block_right_id");
+	if(flag==true){
+		sett_block.style.transition='0s';
+		left_div.style.transition='0s';
+		right_div.style.transition='0s';
+	}
+	else{
+		sett_block.style.transition='1s';
+		left_div.style.transition='1s';
+		right_div.style.transition='1s';
+	}
+}
+
+
+function add_section(){
+	if(last_click_name!=null)
+		if(last_click_name.indexOf('div_one_section_name_')<0)
+			alert('выберите секцию');
 		else{
-			sett_block.style.transition='1s';
-			left_div.style.transition='1s';
-			right_div.style.transition='1s';
+			var right_div=document.getElementById("main_block_right_id");
+			var res=add_form_for_add_or_edit(null,1);
+			right_div.innerHTML=res;
 		}
+		else
+			alert('выберите секцию');
 	}
 
 
-	function add_section(){
-		if(last_click_name!=null)
-			if(last_click_name.indexOf('div_one_section_name_')<0)
-				alert('выберите секцию');
-			else{
-				var right_div=document.getElementById("main_block_right_id");
-				var res=add_form_for_add_or_edit(null,1);
-				right_div.innerHTML=res;
-			}
-			else
-				alert('выберите секцию');
+	function add_section_form(){
+		var right_div=document.getElementById("main_block_right_id");
+		var sect_name_input=document.getElementById("input_for_section_head");
+		var div_save=document.getElementById("div_for_change_info_id");
+		var obj={};
+		obj.Id=+find_maximum_id(mass_section) +1;
+		obj.Parrent_id=last_click_name.split('_')[4];
+		obj.Head=sect_name_input.value;
+		var inside_sect=document.getElementById("div_inside_sections_"+obj.Parrent_id);
+		mass_section.push(obj);
+		var res="";
+		for(var num=0;document.getElementById('save_adds_section_'+num)!=null;++num);
+			res+="<input id='save_adds_section_"+num+"' type='hidden' value='"+obj.Id+"'>";
+		res+="<input id='save_adds_section_parrent_id_"+obj.Id+"' type='hidden' value='"+obj.Parrent_id+"'>";
+		res+="<input id='save_adds_section_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
+		div_save.innerHTML+=res;
+		var tmp="";
+
+		tmp+=str_add_name_section(obj.Id,true);
+		tmp+=load_one_section(obj.Id);
+		inside_sect.innerHTML+=tmp;
+		right_div.innerHTML='';
+	}
+	function find_maximum_id(mass){
+		var max=null;
+		for(var i=0;i<mass.length;++i)
+			if(max==null||max<mass[i].Id)
+				max=mass[i].Id;
+			return max;
 		}
 
-
-		function add_section_form(){
-			var right_div=document.getElementById("main_block_right_id");
-			var sect_name_input=document.getElementById("input_for_section_head");
-			var div_save=document.getElementById("div_for_change_info_id");
-			var obj={};
-			obj.Id=+find_maximum_id(mass_section) +1;
-			obj.Parrent_id=last_click_name.split('_')[4];
-			obj.Head=sect_name_input.value;
-			var inside_sect=document.getElementById("div_inside_sections_"+obj.Parrent_id);
-			mass_section.push(obj);
-			var res="";
-			for(var num=0;document.getElementById('save_adds_section_'+num)!=null;++num);
-				res+="<input id='save_adds_section_"+num+"' type='hidden' value='"+obj.Id+"'>";
-			res+="<input id='save_adds_section_parrent_id_"+obj.Id+"' type='hidden' value='"+obj.Parrent_id+"'>";
-			res+="<input id='save_adds_section_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
-			div_save.innerHTML+=res;
-			var tmp="";
-
-			tmp+=str_add_name_section(obj.Id,true);
-			tmp+=load_one_section(obj.Id);
-			inside_sect.innerHTML+=tmp;
-			right_div.innerHTML='';
-		}
-		function find_maximum_id(mass){
-			var max=null;
-			for(var i=0;i<mass.length;++i)
-				if(max==null||max<mass[i].Id)
-					max=mass[i].Id;
-				return max;
-			}
-
-			function add_article(){
-				if(last_click_name!=null)
-					if(last_click_name.indexOf('div_one_section_name_')<0)
-						alert('выберите секцию');
-					else{
-						var right_div=document.getElementById("main_block_right_id");
-						var res=add_form_for_add_or_edit(null,2)
-						right_div.innerHTML=res;
-					}
-					else
-						alert('выберите секцию');
-				}
-				function add_article_form(){
+		function add_article(){
+			if(last_click_name!=null)
+				if(last_click_name.indexOf('div_one_section_name_')<0)
+					alert('выберите секцию');
+				else{
 					var right_div=document.getElementById("main_block_right_id");
-					var sect_name_input=document.getElementById("input_for_article_head");
-					var sect_body_input=document.getElementById("input_for_article_body");
-					var div_save=document.getElementById("div_for_change_info_id");
-					var obj={};
-					obj.Id=+find_maximum_id(mass_article) +1;
-					obj.Section_id=+last_click_name.split('_')[4];
-					obj.Head=sect_name_input.value;
-					obj.Body=sect_body_input.value;
-					var inside_sect=document.getElementById("div_inside_articles_"+obj.Section_id);
-					mass_article.push(obj);
-					var res="";
-					for(var num=0;document.getElementById('save_adds_article_'+num)!=null;++num);
+					var res=add_form_for_add_or_edit(null,2)
+					right_div.innerHTML=res;
+				}
+				else
+					alert('выберите секцию');
+			}
+			function add_article_form(){
+				var right_div=document.getElementById("main_block_right_id");
+				var sect_name_input=document.getElementById("input_for_article_head");
+				var sect_body_input=document.getElementById("input_for_article_body");
+				var div_save=document.getElementById("div_for_change_info_id");
+				var obj={};
+				obj.Id=+find_maximum_id(mass_article) +1;
+				obj.Section_id=+last_click_name.split('_')[4];
+				obj.Head=sect_name_input.value;
+				obj.Body=sect_body_input.value;
+				var inside_sect=document.getElementById("div_inside_articles_"+obj.Section_id);
+				mass_article.push(obj);
+				var res="";
+				for(var num=0;document.getElementById('save_adds_article_'+num)!=null;++num);
 
-						res+="<input id='save_adds_article_"+num+"' type='hidden' value='"+obj.Id+"'>";
-					res+="<input id='save_adds_article_section_id_"+obj.Id+"' type='hidden' value='"+obj.Section_id+"'>";
-					res+="<input id='save_adds_article_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
-					res+="<input id='save_adds_article_body_"+obj.Id+"' type='hidden' value='"+obj.Body+"'>";
-					div_save.innerHTML+=res;
-					var tmp="";
-					tmp+="<div class='div_one_article_name' id='div_one_article_name_"+obj.Id+"' onclick='load_article("+obj.Id+")'>"+obj.Head+"</div>";
-					inside_sect.innerHTML+=tmp;
-					right_div.innerHTML='';
+					res+="<input id='save_adds_article_"+num+"' type='hidden' value='"+obj.Id+"'>";
+				res+="<input id='save_adds_article_section_id_"+obj.Id+"' type='hidden' value='"+obj.Section_id+"'>";
+				res+="<input id='save_adds_article_head_"+obj.Id+"' type='hidden' value='"+obj.Head+"'>";
+				res+="<input id='save_adds_article_body_"+obj.Id+"' type='hidden' value='"+obj.Body+"'>";
+				div_save.innerHTML+=res;
+				var tmp="";
+				tmp+="<div class='div_one_article_name' id='div_one_article_name_"+obj.Id+"' onclick='load_article("+obj.Id+")'>"+obj.Head+"</div>";
+				inside_sect.innerHTML+=tmp;
+				right_div.innerHTML='';
+			}
+
+
+			function dell_select(){
+				if(!confirm("Удалить выбранное со всеми вложениями?"))
+					return;
+				var id=last_click_name.split('_')[4];
+				if(last_click_name==null){
+					alert("выберите что-то для удаления");
+					return;
+				}
+				document.getElementById("main_block_right_id").innerHTML="";
+				if(last_click_name.indexOf("div_one_section_name")>=0){
+					delete_section_f(id);
+				}
+				else if(last_click_name.indexOf("div_one_article_name")>=0){
+					delete_article_f(id);
+				}
+				last_click_name=null;
+				document.getElementById("main_block_right_id").innerHTML="";
+			}
+			function delete_section_f(id){
+				var div_save=document.getElementById("div_for_change_info_id");
+				var div=document.getElementById("div_one_section_name_"+id);
+				var div_in=document.getElementById("div_one_section_inside_"+id);
+				if(find_in_mass(id,1)==null)
+					return;
+				for(var i=0;i<mass_article.length;++i)
+					if(mass_article[i].Section_id==id)
+						delete_article_f(mass_article[i--].Id);
+					var tmp_bl=null;
+					for(var i=0;i<mass_section.length;++i){
+						if(mass_section[i].Parrent_id==id){
+							delete_section_f(mass_section[i--].Id);
+						}
+					}
+					if(id==1)
+						return;
+					for(var i=0;i<mass_section.length;++i){
+						if(mass_section[i].Id==id){
+							tmp_bl=mass_section.splice(i, 1);
+							mass_section_open.splice(i, 1);
+							break;
+						}
+					}
+					for(var num=0;document.getElementById('save_delete_section_'+num)!=null;++num);
+						var tmp_str="<input id='save_delete_section_"+num+"' type='hidden' value='"+id+"'>";;
+					div_save.innerHTML+=tmp_str;
+					div.remove();
+					div_in.remove();
 				}
 
 
-				function dell_select(){
-if(!confirm("Удалить выбранное со всеми вложениями?"))
-	return;
+				function delete_article_f(id){
+					var div_save=document.getElementById("div_for_change_info_id");
+					var div=document.getElementById('div_one_article_name_'+id);
+					var tmp_bl=null;
+					for(var i=0;i<mass_article.length;++i){
+						if(mass_article[i].Id==id){
+							tmp_bl=mass_article.splice(i, 1);
+							break;
+						}
+					}
+
+					for(var num=0;document.getElementById('save_delete_article_'+num)!=null;++num);
+						var tmp_str="<input id='save_delete_article_"+num+"' type='hidden' value='"+id+"'>";;
+					div_save.innerHTML+=tmp_str;
+					div.remove();
+
+				}
+
+				function move_search_div(marginleft){
+					var search_div=document.getElementById("div_search_id");
+					search_div.style.marginLeft = marginleft+'px';
+				}
+
+
+				function edit_select(){
 					var id=last_click_name.split('_')[4];
 					if(last_click_name==null){
-						alert("выберите что-то для удаления");
+						alert("выберите что то для редактирования");
 						return;
 					}
+					var right_div=document.getElementById("main_block_right_id");
 
+					var res='';
 					if(last_click_name.indexOf("div_one_section_name")>=0){
-						delete_section_f(id);
+						res+=add_form_for_add_or_edit(id,1);
 					}
 					else if(last_click_name.indexOf("div_one_article_name")>=0){
-						delete_article_f(id);
+						res+=add_form_for_add_or_edit(id,2);
 					}
-					last_click_name=null;
-					document.getElementById("main_block_right_id").innerHTML="";
+					right_div.innerHTML=res;
 				}
-				function delete_section_f(id){
-					var div_save=document.getElementById("div_for_change_info_id");
-					var div=document.getElementById("div_one_section_name_"+id);
-					var div_in=document.getElementById("div_one_section_inside_"+id);
-					if(find_in_mass(id,1)==null)
-						return;
-					for(var i=0;i<mass_article.length;++i)
-						if(mass_article[i].Section_id==id)
-							delete_article_f(mass_article[i--].Id);
-						var tmp_bl=null;
-						for(var i=0;i<mass_section.length;++i){
-							if(mass_section[i].Parrent_id==id){
-								delete_section_f(mass_section[i--].Id);
-							}
-						}
-						if(id==1)
-							return;
-						for(var i=0;i<mass_section.length;++i){
-							if(mass_section[i].Id==id){
-								tmp_bl=mass_section.splice(i, 1);
-								break;
-							}
-						}
-						for(var num=0;document.getElementById('save_delete_section_'+num)!=null;++num);
-							var tmp_str="<input id='save_delete_section_"+num+"' type='hidden' value='"+id+"'>";;
-						div_save.innerHTML+=tmp_str;
-						div.remove();
-						div_in.remove();
-					}
-
-
-					function delete_article_f(id){
-						var div_save=document.getElementById("div_for_change_info_id");
-						var div=document.getElementById('div_one_article_name_'+id);
-						var tmp_bl=null;
-						for(var i=0;i<mass_article.length;++i){
-							if(mass_article[i].Id==id){
-								tmp_bl=mass_article.splice(i, 1);
-								break;
-							}
-						}
-
-						for(var num=0;document.getElementById('save_delete_article_'+num)!=null;++num);
-							var tmp_str="<input id='save_delete_article_"+num+"' type='hidden' value='"+id+"'>";;
-						div_save.innerHTML+=tmp_str;
-						div.remove();
-
-					}
-
-					function move_search_div(marginleft){
-						var search_div=document.getElementById("div_search_id");
-						search_div.style.marginLeft = marginleft+'px';
-					}
-
-
-					function edit_select(){
-						var id=last_click_name.split('_')[4];
-						if(last_click_name==null){
-							alert("выберите что то для редактирования");
-							return;
-						}
-						var right_div=document.getElementById("main_block_right_id");
-
-						var res='';
-						if(last_click_name.indexOf("div_one_section_name")>=0){
-							res+=add_form_for_add_or_edit(id,1);
-						}
-						else if(last_click_name.indexOf("div_one_article_name")>=0){
-							res+=add_form_for_add_or_edit(id,2);
-						}
-						right_div.innerHTML=res;
-					}
 function add_form_for_add_or_edit(id ,type){//1 секция 2 статья
 	var res='';
 	switch (type) {
 		case 1:
 		var block=find_in_mass(id,type);
-		res+='<div><label>Заголовок</label>';
+		res+='<div><div><label>Заголовок</label></div>';
 		res+='<textarea class="text_area_add_edit" id="input_for_section_head">'+(block==null?'':block.Head)+'</textarea>';
 		if(block==null)
 			res+='<button onclick="add_section_form()">Добавить раздел</button>';
@@ -889,9 +935,9 @@ function add_form_for_add_or_edit(id ,type){//1 секция 2 статья
 		case 2:
 		var block=find_in_mass(id,type);
 
-		res+='<div><label>Заголовок</label>';
+		res+='<div><div><label>Заголовок</label></div>';
 		res+='<textarea class="text_area_add_edit" id="input_for_article_head">'+(block==null?'':block.Head)+'</textarea>';
-		res+='<label>Содержание</label>';
+		res+='<div><label>Содержание</label></div>';
 		res+='<textarea class="text_area_add_edit" id="input_for_article_body">'+(block==null?'':block.Body)+'</textarea>';
 		if(block==null)
 			res+='<button onclick="add_article_form()">Добавить статью</button>';
@@ -910,7 +956,12 @@ function add_form_for_add_or_edit(id ,type){//1 секция 2 статья
 function edit_select_section_form(id){
 	var block=find_in_mass(id,1);
 	var section=document.getElementById("div_one_section_name_text_"+id);
-	block.Head=document.getElementById("input_for_section_head").value;
+	var str_head_i=document.getElementById("input_for_section_head").value;
+	if(block.Head==str_head_i){
+		document.getElementById("main_block_right_id").innerHTML="";
+		return;
+	}
+	block.Head=str_head_i;
 
 	section.innerHTML=block.Head;
 	document.getElementById("main_block_right_id").innerHTML="";
@@ -926,8 +977,16 @@ function edit_select_article_form(id){
 	var block=find_in_mass(id,2);
 	var name=document.getElementById("div_one_article_name_"+id);
 	var div_save=document.getElementById("div_for_change_info_id");
-	block.Head=document.getElementById("input_for_article_head").value;
-	block.Body=document.getElementById("input_for_article_body").value;
+	var str_head_i=document.getElementById("input_for_article_head").value;
+	var str_body_i=document.getElementById("input_for_article_body").value;
+	if(block.Head==str_head_i&&block.Body==str_body_i){
+		name.click();
+		return;
+	}
+	
+	block.Head=str_head_i;
+	block.Body=str_body_i;
+
 	name.innerHTML=block.Head;
 	name.click();
 	for(var num=0;document.getElementById('save_edit_article_'+num)!=null;++num);
@@ -936,13 +995,28 @@ function edit_select_article_form(id){
 	tmp_str+="<input id='save_edit_article_id_body_"+id+"' type='hidden' value='"+block.Body+"'>";
 	div_save.innerHTML+=tmp_str;
 }
+function close_reload_list(){
+	document.getElementById("main_block_right_id").innerHTML="";
+	for(var i=0;i<mass_section_open.length;++i){
+		
+		var check=document.getElementById("div_one_section_name_"+mass_section_open[i].Id);
+		if(check==null)
+			break;
+		mass_section_open[i].open=true;
+		click_name_section(check);
+	}
 
+}
 
 function home_button_return_left(){
 	var left_div=document.getElementById("main_block_left_id");
 	var str_res_for_left_ul=load_one_section(1);
 	left_div.innerHTML=str_add_name_section(1,true)+str_res_for_left_ul;
 
+	for(var i=0;i<mass_section_open.length;++i){
+		mass_section_open[i].open=!mass_section_open[i].open;
+		click_name_section(document.getElementById("div_one_section_name_"+mass_section_open[i].Id));
+	}
 }
 
 
@@ -987,7 +1061,7 @@ function find_child_section(id,article){
 //save_delete_section_  по счетчику смотрю id
 //save_adds_article_id_ по счетчику смотрю id по id беру данные в save_adds_article_section_id_  save_adds_article_head_  save_adds_article_body_
 //save_adds_section_id_  по счетчику смотрю id по id беру данные в  save_adds_section_parrent_id_  save_adds_section_head_
-
+//document.getElementById("main_block_right_id").innerHTML="";
 var link=document.getElementById("_link_for_ajax_");
 var mass_obj=[];
 send("save_adds_section_",1,1);
