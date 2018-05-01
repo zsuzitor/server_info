@@ -10,7 +10,7 @@ using System.Runtime.Serialization.Json;
 using System.Runtime.Serialization;
 using static HTTPServer.for_main;
 using System.Linq;
-
+using System.Text;
 
 namespace HTTPServer
 {
@@ -189,11 +189,13 @@ namespace HTTPServer
                     string[] str_from_file = File.ReadAllText(@"index.html").Split(new string[] { "<hr class=\"hr_for_replace_server_1\"/>" }, StringSplitOptions.None);
                     res = str_from_file[0] + json_sections + str_from_file[1] + json_articles + str_from_file[2];
                 }
+                UTF8Encoding utf8 = new UTF8Encoding();
                 //string Html = "<html><body><h1>It works!</h1></body></html>";
                 // Необходимые заголовки: ответ сервера, тип и длина содержимого. После двух пустых строк - само содержимое
                 string Str = "HTTP/1.1 200 OK\nContent-type: text/html\nContent-Length:" + res.Length.ToString() + "\n\n" + res;
                 // Приведем строку к виду массива байт
-                byte[] Buffer1 = Encoding.ASCII.GetBytes(Str);
+                byte[] Buffer1 = Encoding.UTF8.GetBytes(Str);//Encoding.ASCII.GetBytes(Str);// utf8.GetBytes(Str);//Encoding.ASCII.GetBytes(Str);
+                //string result = Encoding.UTF8.GetString(Buffer1);
                 // Отправим его клиенту
                 Client.GetStream().Write(Buffer1, 0, Buffer1.Length);
                 // Закроем соединение
@@ -216,7 +218,7 @@ namespace HTTPServer
                 }
                 catch
                 {
-                    Console.WriteLine("Произошла ошибка при чтении строки отправенной"+
+                    Console.WriteLine("Произошла ошибка при чтении строки отправенной "+
 "пользователем для сохранения, был создан пустой список с статьями ");
                     Article_list = new List<Article>();
                 }
