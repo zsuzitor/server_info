@@ -23,24 +23,27 @@ hidden_search_block show_search_block мб не нужен и тот что ря
 добавить защиту на клики(пока определенная функция не выполнится не разрешать менять last_click_name)
 
 разобраться c хранением данных htmlи вообще потестить как хранятся отображаются разные комбинации и тдтдтдтд
-при удалении спрашивать подтверждение??
+
 
 когда скрывается левый список кнопкой и потом тянуть блок с настройками вправо уже руками, для списка размер плохой задается попробовать пофиксить
 
 после редактирования проверять изменилось ли что то  и после этого решать отправлять ли на сервер
-добавить облако тегов его редактирование сохранение хранение и поиск по ним
-
-теги просто прикрутить в body в конце например
-до поиска сохранять innerHTML и после нажатия на домик возвращать его, но это плохо тк если что то редактировать удалять то будет старое отображение
 {
-ПОИСК ДОЛЖЕН ПРИОРИТЕТНО ВЫПОЛНЯТЬСЯ В ВЫБРАННОМ РАЗДЕЛЕ
-сейчас поиск только по том что в выбранной секции/статье  и показывает только inside а нужно после разделителя показывать и остальное
+добавить облако тегов его редактирование сохранение хранение и поиск по ним
+теги просто прикрутить в body в конце например
+}
+до поиска сохранять innerHTML и после нажатия на домик возвращать его, но это плохо тк если что то редактировать удалять то будет старое отображение
+поиск по облаку тегов(если юзер не указал #) оценку делать ниже чем у head но выше чем у body если указал то выше чем у body
+{
+//ПОИСК ДОЛЖЕН ПРИОРИТЕТНО ВЫПОЛНЯТЬСЯ В ВЫБРАННОМ РАЗДЕЛЕ
+//сейчас поиск только по том что в выбранной секции/статье  и показывает только inside а нужно после разделителя показывать и остальное
 ^^^^ возможно задавать коэфициент и чем секция выше по уровню тем ниже коэф
 типо для секции ~50 для родителя 40 для родителя родителя 30 и тдтдтд 
 }
 переписать js под callbackи
 
 +++++++
+//при удалении спрашивать подтверждение??
 //передавать в шарп в json строке всю инфу которая нужна
 //html сейчас не отображается
 //возможность редактирования выделенного объекта
@@ -427,6 +430,7 @@ if(search_string.indexOf('/')==0){
 var mass_words=str_to_mass(search_string);
 //var mass_words=search_string.split(" ");
 var main_mass_obj_articles=[];
+var not_main_mass_obj_articles=[];
 var mass_bracket=[];
 var mass_plus=[];
 var mass_tag=[];
@@ -466,11 +470,29 @@ if(mass_words[i]=='#'){
 }
 
 }
+
+var click_sect_id=(function(){
+					if(last_click_name==null)
+						return 1;
+					if(last_click_name.indexOf('div_one_section_name_')==0)
+						return last_click_name.split('_')[4];
+					else{
+						return find_in_mass(last_click_name.split('_')[4],2).Section_id;
+					}
+
+					
+				})();//или родителя статьи
+
 //TODO проверить как хранится в массиве и как будет искаться
-for(var i=0;i<mass_bracket.length;++i)
-	summ_mass(find_in_article(mass_bracket[i].join(" "),3));
-for(var i=0;i<mass_plus.length;++i)
-	summ_mass(find_in_article(mass_plus[i].join(" "),1.5));
+for(var i=0;i<mass_bracket.length;++i){
+	summ_mass(find_in_article(mass_bracket[i].join(" "),3),true);
+	summ_mass(find_in_article(mass_bracket[i].join(" "),3,find_child_section(click_sect_id,true)),false);
+}
+for(var i=0;i<mass_plus.length;++i){
+
+	summ_mass(find_in_article(mass_plus[i].join(" "),1.5),true);
+	summ_mass(find_in_article(mass_plus[i].join(" "),1.5,find_child_section(click_sect_id,true)),true);
+}
 
 
 //--?
@@ -488,24 +510,14 @@ for(var i=0;i<mass_words.length;++i)
 		for(var i=0;i+num_count<=mass_words_.length;++i){
 			var tmp_mass=[];
 			for(var i2=i;i2<num_count+i;tmp_mass.push(mass_words_[i2++]));
-
-				summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length,find_child_section((function(){
-					if(last_click_name==null)
-						return 1;
-					if(last_click_name.indexOf('div_one_section_name_')==0)
-						return last_click_name.split('_')[4];
-					else{
-						return find_in_mass(last_click_name.split('_')[4],2).Section_id;
-					}
-
-					
-				})(),true)));
+summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length),false);
+				summ_mass(find_in_article(tmp_mass.join(" "),tmp_mass.length,find_child_section(click_sect_id,true)),true);
 
 
 		}
 
 	}
-	main_mass_obj_articles.sort(function(a, b) {
+	var funct_sort=function(a, b) {
 
 		var sum_a=a.Count_head_nof;
 		sum_a+=a.Count_body_nof;
@@ -517,7 +529,9 @@ for(var i=0;i<mass_words.length;++i)
 		sum_b+=b.Count_body_f;
 		if (sum_a < sum_b) return 1;
 		if (sum_a > sum_b) return -1;
-	});
+	};
+	main_mass_obj_articles.sort(funct_sort);
+	not_main_mass_obj_articles.sort(funct_sort);
 
 	var div_left=document.getElementById("main_block_left_id");
 	var res_for_div_left="";
@@ -534,11 +548,30 @@ for(var i=0;i<mass_words.length;++i)
 		main_mass_obj_articles[i].Id+'" onclick="load_article('+main_mass_obj_articles[i].Id+')">'+main_mass_obj_articles[i].Head+'</div>';
 	}
 	res_for_div_left+="</div></div>";
-//TODO тут еще и секции
 res_for_div_left+='<div class="div_inside_sections" id="div_inside_sections_ar"></div>';
-
-
 res_for_div_left+='</div>';
+
+res_for_div_left+='<div class="div_one_section_name" onclick="click_name_section(this)" id="div_one_section_name_arall">'+
+	'<div id="before_for_sect_name_arall" class="before_for_sect_name div_inline_block"></div>'+
+	'<div class="div_inline_block" id="div_one_section_name_text_arall">Статьи по всей БД</div></div>';
+
+	res_for_div_left+='<div style="display: inline-block;" class="div_one_section_inside_cl" id="div_one_section_inside_arall">'+
+	'<div class="div_one_section_inside_inside" id="div_one_section_inside_inside_arall">';
+	res_for_div_left+="<div class='div_inside_articles' id='div_inside_articles_arall'>";
+	
+	for(var i=0;i<not_main_mass_obj_articles.length;++i){
+		res_for_div_left+='<div class="div_one_article_name" id="div_one_article_name_'+
+		not_main_mass_obj_articles[i].Id+'" onclick="load_article('+not_main_mass_obj_articles[i].Id+')">'+not_main_mass_obj_articles[i].Head+'</div>';
+	}
+	res_for_div_left+="</div></div>";
+res_for_div_left+='<div class="div_inside_sections" id="div_inside_sections_arall"></div>';
+res_for_div_left+='</div>';
+
+//TODO тут еще и секции
+
+
+
+
 //tmp+="<div class='div_one_article_name' id='div_one_article_name_"+obj.Id+"' onclick='load_article("+obj.Id+")'>"+obj.Head+"</div>";
 //alert(res_for_div_left);
 div_left.innerHTML=res_for_div_left;
@@ -596,12 +629,13 @@ res.push(obj_for_res);
 return res;
 
 }
-function summ_mass(mass){
-	
-	for(var i=0;i<mass.length;++i){
+function summ_mass(mass,inside){
+	if(inside==true){
+		for(var i=0;i<mass.length;++i){
 		if(main_mass_obj_articles[i]==undefined){
 
 			main_mass_obj_articles[i]={};
+			main_mass_obj_articles[i].inside=inside;
 			main_mass_obj_articles[i].Head=mass[i].Head;
 			main_mass_obj_articles[i].Id=mass[i].Id;
 			main_mass_obj_articles[i].Count_head_nof=0;
@@ -618,6 +652,31 @@ function summ_mass(mass){
 				main_mass_obj_articles[i].Count_body_f+=mass[i].Count_body_f;
 				
 			}
+	}
+	else{
+		for(var i=0;i<mass.length;++i){
+		if(not_main_mass_obj_articles[i]==undefined){
+
+			not_main_mass_obj_articles[i]={};
+			not_main_mass_obj_articles[i].inside=inside;
+			not_main_mass_obj_articles[i].Head=mass[i].Head;
+			not_main_mass_obj_articles[i].Id=mass[i].Id;
+			not_main_mass_obj_articles[i].Count_head_nof=0;
+			not_main_mass_obj_articles[i].Count_body_nof=0;
+			not_main_mass_obj_articles[i].Count_head_f=0;
+			not_main_mass_obj_articles[i].Count_body_f=0;
+		}
+		
+			// for(var i2=0;i2<main_mass_obj_articles.length;++i2){
+			// 	if(mass[i].Id==main_mass_obj_articles[i2].Id){
+				not_main_mass_obj_articles[i].Count_head_nof+=mass[i].Count_head_nof;
+				not_main_mass_obj_articles[i].Count_body_nof+=mass[i].Count_body_nof;
+				not_main_mass_obj_articles[i].Count_head_f+=mass[i].Count_head_f;
+				not_main_mass_obj_articles[i].Count_body_f+=mass[i].Count_body_f;
+				
+			}
+	}
+	
 		}
 
 
@@ -725,7 +784,8 @@ function summ_mass(mass){
 
 
 				function dell_select(){
-
+if(!confirm("Удалить выбранное со всеми вложениями?"))
+	return;
 					var id=last_click_name.split('_')[4];
 					if(last_click_name==null){
 						alert("выберите что-то для удаления");
