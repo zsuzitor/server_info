@@ -434,6 +434,7 @@ div.div_search{
 
 	div.div_one_article_name{
 		border-bottom: 1px solid black;
+		white-space:nowrap;
 	}
 	div.div_one_article_name:hover{
 		-webkit-box-shadow:inset 0 0 15px rgba(0,0,0,1);

@@ -505,7 +505,7 @@ if(mass_words[i]=='('){
 	mass_bracket.push(tmp_mass);
 }
 if(mass_words[i]=='#'){
-	mass_tag.push(mass_words[++i]);
+	mass_tag.push('@'+mass_words[++i]);
 }
 
 }
@@ -523,6 +523,13 @@ var click_sect_id=(function(){
 				})();//или родителя статьи
 
 //TODO проверить как хранится в массиве и как будет искаться
+for(var i=0;i<mass_tag.length;++i){
+summ_mass(find_in_article(mass_tag[i],4),true);
+	var mm=find_child_section(click_sect_id,true);
+	if(mm&&mm.length>0&&click_sect_id>1)
+		summ_mass(find_in_article(mass_tag[i],4,mm),false);
+}
+
 for(var i=0;i<mass_bracket.length;++i){
 	summ_mass(find_in_article(mass_bracket[i].join(" "),3),true);
 	var mm=find_child_section(click_sect_id,true);
@@ -1029,6 +1036,7 @@ function convert_string(str){
 	var res="";
 	res=str.replace(/</g,'&lt;');
 	res=res.replace(/>/g,'&gt;');
+	res=res.replace(/@@/g,'<br>');
 //&lt; и &gt;
 return res;
 }
