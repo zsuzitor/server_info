@@ -81,6 +81,8 @@ namespace HTTPServer
             // Например, "%20" -> " "
 
             RequestUri = Uri.UnescapeDataString(RequestUri);
+            RequestUri = RequestUri.Replace("@/@","\\");
+            RequestUri = RequestUri.Replace("@//@", "?");
             string FilePath = RequestUri;
             if (RequestUri.Length>0&& RequestUri[0] == '/')
             {
@@ -220,7 +222,7 @@ namespace HTTPServer
                 {
                     Console.WriteLine("Произошла ошибка при чтении строки отправенной "+
 "пользователем для сохранения, был создан пустой список с статьями ");
-                    Article_list = new List<Article>();
+                    //Article_list = new List<Article>();
                 }
 
 

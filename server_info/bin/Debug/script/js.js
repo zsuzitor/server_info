@@ -772,7 +772,8 @@ function add_section(){
 		var obj={};
 		obj.Id=+find_maximum_id(mass_section) +1;
 		obj.Parrent_id=last_click_name.split('_')[4];
-		obj.Head=sect_name_input.value;
+		obj.Head=sect_name_input.value.replace(/#/g,'@');//.replace(/\\/g,'@/@');
+		//res=str.replace(/</g,'&lt;');
 		var inside_sect=document.getElementById("div_inside_sections_"+obj.Parrent_id);
 		mass_section.push(obj);
 		var res="";
@@ -816,8 +817,8 @@ function add_section(){
 				var obj={};
 				obj.Id=+find_maximum_id(mass_article) +1;
 				obj.Section_id=+last_click_name.split('_')[4];
-				obj.Head=sect_name_input.value;
-				obj.Body=sect_body_input.value;
+				obj.Head=sect_name_input.value.replace(/#/g,'@');//.replace(/\\/g,'@/@');
+				obj.Body=sect_body_input.value.replace(/#/g,'@');//.replace(/\\/g,'@/@')
 				var inside_sect=document.getElementById("div_inside_articles_"+obj.Section_id);
 				mass_article.push(obj);
 				var res="";
@@ -970,7 +971,7 @@ function edit_select_section_form(id){
 		document.getElementById("main_block_right_id").innerHTML="";
 		return;
 	}
-	block.Head=str_head_i;
+	block.Head=str_head_i.replace(/#/g,'@');;
 
 	section.innerHTML=block.Head;
 	document.getElementById("main_block_right_id").innerHTML="";
@@ -986,8 +987,8 @@ function edit_select_article_form(id){
 	var block=find_in_mass(id,2);
 	var name=document.getElementById("div_one_article_name_"+id);
 	var div_save=document.getElementById("div_for_change_info_id");
-	var str_head_i=document.getElementById("input_for_article_head").value;
-	var str_body_i=document.getElementById("input_for_article_body").value;
+	var str_head_i=document.getElementById("input_for_article_head").value.replace(/#/g,'@');;
+	var str_body_i=document.getElementById("input_for_article_body").value.replace(/#/g,'@');;
 	if(block.Head==str_head_i&&block.Body==str_body_i){
 		name.click();
 		return;
@@ -1036,7 +1037,9 @@ function convert_string(str){
 	var res="";
 	res=str.replace(/</g,'&lt;');
 	res=res.replace(/>/g,'&gt;');
-	res=res.replace(/@@/g,'<br>');
+	res=res.replace(/@/g,'#');
+	//res=res.replace('/@@/g','<br>');
+	//res=res.replace('/\\/g','<br>');
 //&lt; и &gt;
 return res;
 }
@@ -1083,8 +1086,10 @@ send("save_edit_article_",3,2);
 send("save_delete_section_",2,1);//2
 send("save_delete_article_",2,2);//2
 
-
+//res=str.replace(/</g,'&lt
 var str="/change_something/"+JSON.stringify(mass_obj);
+str=str.replace(/\\/g,'@/@');
+str=str.replace(/\?/g,'@//@');
 link.href=str;
 link.click();
 link.href='';
