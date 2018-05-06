@@ -175,7 +175,28 @@ namespace HTTPServer
             {
 
             }
-            
+            if (!inside && RequestUri == "/json_data_article")
+            {
+                inside = true;
+                
+                UTF8Encoding utf8 = new UTF8Encoding();
+                string res  = File.ReadAllText(@"Article.json");
+                byte[] Buffer1 = Encoding.UTF8.GetBytes(res);
+                Client.GetStream().Write(Buffer1, 0, Buffer1.Length);
+                Client.Close();
+
+            }
+            if (!inside && RequestUri == "/json_data_section")
+            {
+                inside = true;
+
+                UTF8Encoding utf8 = new UTF8Encoding();
+                string res = File.ReadAllText(@"Section.json");
+                byte[] Buffer1 = Encoding.UTF8.GetBytes(res);
+                Client.GetStream().Write(Buffer1, 0, Buffer1.Length);
+                Client.Close();
+
+            }
             if (!inside&&RequestUri == "/")
             {
                 inside = true;
@@ -184,12 +205,13 @@ namespace HTTPServer
 
                     //string first_part_html = File.ReadAllText(@"in1.html");
                     //string second_part_html = "'><input type=\"hidden\" id=\"string_base_info_articles\" value='";
-                    string json_articles = File.ReadAllText(@"Article.json");
-                    string json_sections = File.ReadAllText(@"Section.json");
+                    //string json_articles = File.ReadAllText(@"Article.json");
+                    //string json_sections = File.ReadAllText(@"Section.json");
                     // string third_part_html = File.ReadAllText(@"in2.html");
 
-                    string[] str_from_file = File.ReadAllText(@"index.html").Split(new string[] { "<hr class=\"hr_for_replace_server_1\"/>" }, StringSplitOptions.None);
-                    res = str_from_file[0] + json_sections + str_from_file[1] + json_articles + str_from_file[2];
+                    //string[] str_from_file = File.ReadAllText(@"index.html").Split(new string[] { "<hr class=\"hr_for_replace_server_1\"/>" }, StringSplitOptions.None);
+                    //res = str_from_file[0] + json_sections + str_from_file[1] + json_articles + str_from_file[2];
+                    res = File.ReadAllText(@"index.html");
                 }
                 UTF8Encoding utf8 = new UTF8Encoding();
                 //string Html = "<html><body><h1>It works!</h1></body></html>";

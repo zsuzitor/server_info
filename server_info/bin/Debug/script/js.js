@@ -108,7 +108,17 @@ var client_heigth=0;
 		var mass_article=null;
 		var last_click_name=null;
 		var mass_section_open=[];
-
+		var obj_request_server_block={article:true,section:true,save:true};
+		obj_request_server_block.set_article_f_l_p=function(val){
+			this.article=val;
+			if(this.article&&this.section)
+				next_step_load_page_after_data();
+		};
+		obj_request_server_block.set_section_f_l_p=function(val){
+			this.section=val;
+			if(this.article&&this.section)
+				next_step_load_page_after_data();
+		};
 		if (document.addEventListener){
 			document.addEventListener("DOMContentLoaded", page_first_start);
 		} else if (document.attachEvent){
@@ -189,17 +199,28 @@ function page_first_start(){
 		move_search_div(450);
 	else if(document.getElementById("div_search_id").getBoundingClientRect().right>50)
 		move_search_div(0);
+	obj_request_server_block.article=false;
+	obj_request_server_block.section=false;
 
-	mass_section=JSON.parse(document.getElementById("string_base_info_sections").value);
-	mass_article=JSON.parse(document.getElementById("string_base_info_articles").value);
+	document.getElementById("_link_for_ajax_load_data_article").click();
+	document.getElementById("_link_for_ajax_load_data_section").click();
+}
+function next_step_load_page_after_data(){
+	var left_div=document.getElementById("main_block_left_id");
 	for(var i=0;i<mass_section.length;++i)
 		mass_section_open.push({Id: mass_section[i].Id,open: false});
 	
 	var str_res_for_left_ul=load_one_section(1);
 	left_div.innerHTML=str_add_name_section(1,true)+str_res_for_left_ul;
-	document.getElementById("div_for_base_info_id").innerHTML="";
 }
-
+function OnComplete_load_data_article(request, status){
+	mass_article=JSON.parse(request.responseText);
+	obj_request_server_block.set_article_f_l_p(true);
+}
+function OnComplete_load_data_section(request, status){
+	mass_section=JSON.parse(request.responseText);
+	obj_request_server_block.set_section_f_l_p(true);
+}
 
 function str_add_name_section(id,all){
 	var res="";
@@ -524,7 +545,7 @@ var click_sect_id=(function(){
 
 //TODO проверить как хранится в массиве и как будет искаться
 for(var i=0;i<mass_tag.length;++i){
-summ_mass(find_in_article(mass_tag[i],4),true);
+	summ_mass(find_in_article(mass_tag[i],4),true);
 	var mm=find_child_section(click_sect_id,true);
 	if(mm&&mm.length>0&&click_sect_id>1)
 		summ_mass(find_in_article(mass_tag[i],4,mm),false);
